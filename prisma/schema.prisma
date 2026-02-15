@@ -1,0 +1,138 @@
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Currency {
+  USD
+  NOK
+  EUR
+}
+
+enum ContractStatus {
+  ACTIVE
+  EXPIRING
+  TERMINATED
+}
+
+enum LedgerEntryType {
+  INCOME
+  EXPENSE
+}
+
+model Company {
+  id        String   @id @default(cuid())
+  name      String
+  country   String?
+  timezone  String   @default("Europe/Oslo")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  settings  Settings?
+  costs     Cost[]
+  contracts Contract[]
+  ledger    LedgerEntry[]
+  users     User[]
+}
+
+model Settings {
+  id               String   @id @default(cuid())
+  companyId        String   @unique
+  language         String   @default("NO")
+  displayCurrency  Currency @default(USD)
+  baseCurrency     Currency @default(USD)
+  defaultAlertDays Int      @default(30)
+
+  company Company @relation(fields: [companyId], references: [id])
+}
+
+model Cost {
+  id        String   @id @default(cuid())
+  companyId String
+  name      String
+  supplier  String?
+  category  String?
+  amount    Decimal
+  currency  Currency
+  amountUsd Decimal
+  frequency String   @default("MONTHLY")
+  startDate DateTime?
+  isActive  Boolean  @default(true)
+  notes     String?
+  deletedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@index([companyId, deletedAt])
+  @@index([companyId, frequency])
+  @@index([companyId, createdAt])
+}
+
+model Contract {
+  id            String         @id @default(cuid())
+  companyId     String
+  name          String
+  supplier      String?
+  startDate     DateTime?
+  endDate       DateTime?
+  renewalDate   DateTime?
+  cancelByDate  DateTime?
+  status        ContractStatus @default(ACTIVE)
+  alertDays     Int?
+  pricePerMonth Decimal?
+  currency      Currency?
+  notes         String?
+  deletedAt     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@index([companyId, deletedAt])
+  @@index([companyId, endDate])
+  @@index([companyId, cancelByDate])
+  @@index([companyId, renewalDate])
+}
+
+model LedgerEntry {
+  id          String          @id @default(cuid())
+  companyId   String
+  type        LedgerEntryType
+  amount      Decimal
+  currency    Currency
+  category    String?
+  description String?
+  entryDate   DateTime
+  deletedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@index([companyId, deletedAt])
+  @@index([companyId, entryDate])
+  @@index([companyId, type])
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  companyId    String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
+}
+
