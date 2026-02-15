@@ -4,7 +4,7 @@ import { requireCompanyId } from "@/lib/session";
 import { Currency } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import ThemeModeSelect from "@/components/ThemeModeSelect";
+import SettingsForm from "@/components/SettingsForm";
 import { withRequestContext, withTiming } from "@/lib/observability";
 import { clampAlertDays, parseCurrency } from "@/lib/validation";
 import { getSettingsCached } from "@/lib/cached-data";
@@ -56,9 +56,7 @@ export default async function Page() {
     getSettingsCached(companyId)
   );
   const { t, language } = getTranslations(settings?.language);
-  const updateLabel =
-    t("updateSettings") ||
-    (language === "NO" ? "Oppdater innstillinger" : "Update settings");
+  const saveLabel = t("save") || (language === "NO" ? "Lagre" : "Save");
 
   return (
     <div className="page">
@@ -66,63 +64,24 @@ export default async function Page() {
         <h1 className="page-title">{t("settings")}</h1>
         <p className="muted">{t("settingsSubtitle")}</p>
       </div>
-      <form action={updateSettings} className="panel stack">
-        <div className="settings-grid">
-          <label className="stack">
-            <span>{t("language")}</span>
-            <select name="language" defaultValue={language}>
-              <option value="NO">NO</option>
-              <option value="EN">EN</option>
-            </select>
-          </label>
-          <label className="stack">
-            <span>{t("displayCurrency")}</span>
-            <select
-              name="displayCurrency"
-              defaultValue={settings?.displayCurrency ?? "USD"}
-            >
-              <option value="USD">USD</option>
-              <option value="NOK">NOK</option>
-              <option value="EUR">EUR</option>
-            </select>
-          </label>
-          <label className="stack">
-            <span>{t("baseCurrency")}</span>
-            <select
-              name="baseCurrency"
-              defaultValue={settings?.baseCurrency ?? "USD"}
-            >
-              <option value="USD">USD</option>
-              <option value="NOK">NOK</option>
-              <option value="EUR">EUR</option>
-            </select>
-          </label>
-          <label className="stack">
-            <span>{t("alertDays")}</span>
-            <input
-              name="defaultAlertDays"
-              type="number"
-              min="1"
-              defaultValue={settings?.defaultAlertDays ?? 30}
-            />
-          </label>
-          <ThemeModeSelect
-            label={language === "NO" ? "Tema" : "Theme"}
-            systemLabel="System"
-            lightLabel="Light"
-            darkLabel="Dark"
-          />
-        </div>
-        <div className="form-actions">
-          <button
-            type="submit"
-            className="form-primary"
-            aria-label={updateLabel || "Update settings"}
-          >
-            {updateLabel || (language === "NO" ? "Oppdater innstillinger" : "Update settings")}
-          </button>
-        </div>
-      </form>
+      <SettingsForm
+        action={updateSettings}
+        language={language}
+        displayCurrency={settings?.displayCurrency ?? "USD"}
+        baseCurrency={settings?.baseCurrency ?? "USD"}
+        defaultAlertDays={settings?.defaultAlertDays ?? 30}
+        labels={{
+          language: t("language"),
+          displayCurrency: t("displayCurrency"),
+          baseCurrency: t("baseCurrency"),
+          alertDays: t("alertDays"),
+          theme: language === "NO" ? "Tema" : "Theme",
+          save: saveLabel,
+          system: "System",
+          light: "Light",
+          dark: "Dark",
+        }}
+      />
     </div>
   );
   });

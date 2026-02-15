@@ -15,6 +15,7 @@ const prisma = new PrismaClient({
 async function main() {
   await prisma.contract.deleteMany();
   await prisma.cost.deleteMany();
+  await prisma.ledgerEntry.deleteMany();
   await prisma.user.deleteMany();
   await prisma.settings.deleteMany();
   await prisma.company.deleteMany();
