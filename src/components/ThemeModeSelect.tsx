@@ -39,6 +39,7 @@ export default function ThemeModeSelect({
       stored === "light" || stored === "dark" || stored === "system"
         ? stored
         : "system";
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMode(initialMode);
     applyTheme(initialMode);
   }, []);

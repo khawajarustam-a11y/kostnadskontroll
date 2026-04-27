@@ -101,10 +101,13 @@ export default async function Page() {
       return Number.isFinite(amountInDisplay) ? sum + amountInDisplay : sum;
     }, 0);
 
-  const activeContractsCount = contracts.filter(
-    (contract) =>
-      contract.status === "ACTIVE" || contract.status === "EXPIRING"
-  ).length;
+  const activeContractsCount = contracts.filter((contract) => {
+    if (contract.endDate && contract.endDate < new Date()) {
+      return false;
+    }
+
+    return contract.status === "ACTIVE";
+  }).length;
 
   const incomeTotal = ledgerEntries
     .filter((entry) => entry.type === "INCOME")

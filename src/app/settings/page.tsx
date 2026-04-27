@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getTranslations } from "@/lib/i18n";
 import { requireCompanyId } from "@/lib/session";
-import { Currency } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import SettingsForm from "@/components/SettingsForm";
