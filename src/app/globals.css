@@ -1031,6 +1031,18 @@ button.ghost {
   opacity: 0.82;
 }
 
+
+.import-actions-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.import-actions-row .muted {
+  max-width: 620px;
+}
+
 .import-disabled-grid {
   display: flex;
   gap: 12px;

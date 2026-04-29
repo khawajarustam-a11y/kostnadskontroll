@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSettingsCached } from "@/lib/cached-data";
 import { getComputedStatus } from "@/lib/contract-risk";
+import { extractContractFromDocument } from "@/lib/document-import";
 import { convertWithUsdRates, getUsdRates } from "@/lib/currency";
 import { getTranslations } from "@/lib/i18n";
 import { withRequestContext, withTiming } from "@/lib/observability";
@@ -191,6 +192,57 @@ async function importCsv(formData: FormData) {
   redirect("/import?status=imported&count=" + imported);
 }
 
+async function importDocument(formData: FormData) {
+  "use server";
+  const companyId = await requireCompanyId();
+  const file = formData.get("document");
+  if (!(file instanceof File) || file.size === 0) {
+    redirect("/import?status=missing_file");
+  }
+  if (!process.env.OPENAI_API_KEY) {
+    redirect("/import?status=missing_ai");
+  }
+
+  const settings = await getSettingsCached(companyId);
+  const defaultCurrency: Currency = settings?.displayCurrency ?? "USD";
+  const defaultAlertDays = settings?.defaultAlertDays ?? 30;
+  const extracted = await extractContractFromDocument(file);
+  if (!extracted?.name) {
+    redirect("/import?status=no_extraction");
+  }
+
+  const startDate = parseOptionalDate(extracted.startDate ?? "");
+  const endDate = parseOptionalDate(extracted.endDate ?? "");
+  const renewalDate = parseOptionalDate(extracted.renewalDate ?? "");
+  const cancelByDate = parseOptionalDate(extracted.cancelByDate ?? "");
+  if (startDate === "invalid" || endDate === "invalid" || renewalDate === "invalid" || cancelByDate === "invalid") {
+    redirect("/import?status=no_extraction");
+  }
+
+  const now = new Date();
+  await prisma.contract.create({
+    data: {
+      companyId,
+      name: extracted.name,
+      supplier: extracted.supplier || null,
+      pricePerMonth: extracted.pricePerMonth ?? null,
+      currency: extracted.currency ?? defaultCurrency,
+      startDate,
+      endDate,
+      renewalDate,
+      cancelByDate,
+      status: getComputedStatus(endDate, cancelByDate, now),
+      alertDays: extracted.alertDays ?? defaultAlertDays,
+      notes: extracted.notes ? `Imported from ${file.name}. ${extracted.notes}` : `Imported from ${file.name}. Please verify the extracted dates and price.`,
+    },
+  });
+
+  revalidatePath("/contracts");
+  revalidatePath("/dashboard");
+  revalidatePath("/action-required");
+  redirect("/import?status=document_imported&count=1");
+}
+
 export default async function Page({
   searchParams,
 }: {
@@ -211,16 +263,22 @@ export default async function Page({
           <p className="muted">{t("importSubtitle")}</p>
         </div>
 
-        {status === "imported" ? (
+        {status === "imported" || status === "document_imported" ? (
           <div className="alert-panel alert-panel-safe">
             <div className="alert-panel-header">
               <span className="badge badge-safe">{t("notice")}</span>
-              <h2>{count ?? 0} {t("rowsImported")}</h2>
+              <h2>{count ?? 0} {status === "document_imported" ? t("documentsImported") : t("rowsImported")}</h2>
             </div>
           </div>
         ) : null}
         {status === "missing_file" || status === "empty_file" ? (
           <p className="form-error">{t("importError")}</p>
+        ) : null}
+        {status === "missing_ai" ? (
+          <p className="form-error">{t("missingAiKey")}</p>
+        ) : null}
+        {status === "no_extraction" ? (
+          <p className="form-error">{t("noExtraction")}</p>
         ) : null}
 
         <section className="panel import-panel">
@@ -244,13 +302,19 @@ export default async function Page({
           </form>
         </section>
 
-        <section className="panel import-panel muted-panel">
+        <section className="panel import-panel">
           <div className="panel-title">{t("photoEmailImport")}</div>
           <p className="muted">{t("photoEmailImportText")}</p>
-          <div className="import-disabled-grid">
-            <button type="button" className="form-secondary" disabled>{t("uploadPhoto")}</button>
-            <button type="button" className="form-secondary" disabled>{t("connectEmail")}</button>
-          </div>
+          <form action={importDocument} className="stack">
+            <label className="field-label field-label-wide">
+              <span>{t("documentFile")}</span>
+              <input name="document" type="file" accept="image/*,.pdf,.txt,.eml,text/plain,message/rfc822,application/pdf" required />
+            </label>
+            <div className="import-actions-row">
+              <button type="submit" className="form-primary">{t("extractContract")}</button>
+              <span className="muted">{t("documentImportNote")}</span>
+            </div>
+          </form>
         </section>
 
         <section className="panel">
