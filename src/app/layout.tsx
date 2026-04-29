@@ -17,7 +17,7 @@ const plexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: "Kostnadskontroll",
-  description: "Kontroll over kostnader og kontrakter",
+  description: "Never miss a renewal or cancellation deadline.",
 };
 
 export default async function RootLayout({
@@ -43,6 +43,9 @@ export default async function RootLayout({
                 <>
                   <Link className="nav-link" href="/dashboard">
                     Dashboard
+                  </Link>
+                  <Link className="nav-link" href="/action-required">
+                    Action Required
                   </Link>
                   <Link className="nav-link" href="/costs">
                     Costs
