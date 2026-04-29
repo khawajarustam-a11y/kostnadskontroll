@@ -1,4 +1,5 @@
 import ConfirmDeleteForm from "@/components/ConfirmDeleteForm";
+import ContractQuickForm from "@/components/ContractQuickForm";
 import { getTranslations } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 import { requireCompanyId } from "@/lib/session";
@@ -7,7 +8,7 @@ import { revalidatePath } from "next/cache";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { withRequestContext, withTiming } from "@/lib/observability";
-import { parseOptionalDate } from "@/lib/validation";
+import { clampAlertDays, parseCurrency, parseOptionalDate, parsePositiveAmount } from "@/lib/validation";
 import { getSettingsCached } from "@/lib/cached-data";
 
 export const runtime = "nodejs";
@@ -53,6 +54,10 @@ async function createContract(formData: FormData) {
   const endDateValue = String(formData.get("endDate") ?? "").trim();
   const renewalDateValue = String(formData.get("renewalDate") ?? "").trim();
   const cancelByDateValue = String(formData.get("cancelByDate") ?? "").trim();
+  const pricePerMonth = parsePositiveAmount(formData.get("pricePerMonth"));
+  const currency = parseCurrency(formData.get("currency"));
+  const alertDays = clampAlertDays(formData.get("alertDays"), 30);
+  const notes = String(formData.get("notes") ?? "").trim();
 
   if (!name) {
     redirect("/contracts?error=invalid_contract");
@@ -79,6 +84,10 @@ async function createContract(formData: FormData) {
       endDate,
       renewalDate,
       cancelByDate,
+      pricePerMonth,
+      currency,
+      alertDays,
+      notes: notes || null,
     },
   });
 
@@ -136,6 +145,7 @@ export default async function Page({
   );
   const { t, language } = getTranslations(settings?.language);
   const locale = language === "NO" ? "nb-NO" : "en-US";
+  const displayCurrency = settings?.displayCurrency ?? "USD";
   const defaultAlertDays = settings?.defaultAlertDays ?? 30;
   const { error, view } = searchParams ? await searchParams : {};
   const showDeleted = view === "deleted";
@@ -230,45 +240,33 @@ export default async function Page({
 
       {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
 
-      <div className="panel">
-        <div className="panel-title">{addContractLabel || "Add contract"}</div>
-        <form id="contract-form" action={createContract} className="stack">
-          <div className="form-section">
-            <div className="form-section-title">{t("basicInfo")}</div>
-            <div className="form-grid form-grid-3">
-              <input name="name" placeholder={t("name")} required />
-              <input name="supplier" placeholder={t("supplier")} />
-              <input value={language === "NO" ? "Status beregnes automatisk" : "Status is calculated automatically"} disabled />
-            </div>
-          </div>
-          <div className="form-section">
-            <div className="form-section-title">{t("contractDates")}</div>
-            <div className="form-grid form-grid-4">
-              <label className="stack" style={{ gap: 4 }}>
-                <span className="muted">{t("startDate")}</span>
-                <input name="startDate" type="date" />
-              </label>
-              <label className="stack" style={{ gap: 4 }}>
-                <span className="muted">{t("endDate")}</span>
-                <input name="endDate" type="date" />
-              </label>
-              <label className="stack" style={{ gap: 4 }}>
-                <span className="muted">{t("renewalDate")}</span>
-                <input name="renewalDate" type="date" />
-              </label>
-              <label className="stack" style={{ gap: 4 }}>
-                <span className="muted">{t("cancelByDate")}</span>
-                <input name="cancelByDate" type="date" />
-              </label>
-            </div>
-          </div>
-        </form>
-        <div className="form-actions">
-          <button type="submit" form="contract-form" className="form-primary" aria-label={addContractLabel || "Add contract"}>
-            {addContractLabel || (language === "NO" ? "Legg til kontrakt" : "Add contract")}
-          </button>
-        </div>
-      </div>
+      <ContractQuickForm
+        action={createContract}
+        defaultCurrency={displayCurrency}
+        defaultAlertDays={defaultAlertDays}
+        labels={{
+          title: t("quickAddContract"),
+          subtitle: t("quickAddSubtitle"),
+          template: t("contractTemplate"),
+          monthly: t("templateMonthlySaaS"),
+          annual: t("templateAnnualSaaS"),
+          domain: t("templateDomainHosting"),
+          insurance: t("templateInsurance"),
+          custom: t("templateCustom"),
+          name: t("name"),
+          supplier: t("supplier"),
+          pricePerMonth: t("pricePerMonth"),
+          currency: t("currency"),
+          startDate: t("startDate"),
+          endDate: t("endDate"),
+          renewalDate: t("renewalDate"),
+          cancelByDate: t("cancelByDate"),
+          alertDays: t("alertDays"),
+          notes: t("notes"),
+          submit: addContractLabel || t("addContract"),
+          quickTip: t("quickAddTip"),
+        }}
+      />
 
       <div className="view-switch">
         <Link className={`view-switch-item ${!showDeleted ? "active" : ""}`} href="/contracts">
