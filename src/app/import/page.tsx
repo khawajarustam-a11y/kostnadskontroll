@@ -302,6 +302,10 @@ export default async function Page({
     const { t } = getTranslations(settings?.language);
     const { status, count } = searchParams ? await searchParams : {};
     const openAiKey = process.env.OPENAI_API_KEY?.trim() ?? "";
+    const detectedOpenAiKeys = Object.keys(process.env)
+      .filter((key) => key.toUpperCase().includes("OPENAI") || key.toUpperCase().includes("OPEN_AI"))
+      .sort();
+    const vercelEnv = process.env.VERCEL_ENV ?? "unknown";
     const aiStatus = openAiKey
       ? openAiKey.startsWith("sk-")
         ? t("aiKeyLooksValid")
@@ -332,6 +336,8 @@ export default async function Page({
           <div className="form-error import-config-error">
             <p>{t("missingAiKey")}</p>
             <p>{t("aiKeyStatus")}: {aiStatus}</p>
+            <p>{t("vercelEnvironment")}: {vercelEnv}</p>
+            <p>{t("detectedOpenAiVariables")}: {detectedOpenAiKeys.length > 0 ? detectedOpenAiKeys.join(", ") : t("none")}</p>
           </div>
         ) : null}
         {status === "no_extraction" ? (
