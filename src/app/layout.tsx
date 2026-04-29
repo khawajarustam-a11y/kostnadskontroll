@@ -53,6 +53,9 @@ export default async function RootLayout({
                   <Link className="nav-link" href="/contracts">
                     Contracts
                   </Link>
+                  <Link className="nav-link" href="/import">
+                    Import
+                  </Link>
                   <Link className="nav-link" href="/ledger">
                     Regnskap
                   </Link>

@@ -1021,3 +1021,46 @@ button.ghost {
     grid-column: auto;
   }
 }
+
+
+.import-panel {
+  border-left: 5px solid rgba(37, 99, 235, 0.65);
+}
+
+.muted-panel {
+  opacity: 0.82;
+}
+
+.import-disabled-grid {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.import-disabled-grid button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+  box-shadow: none;
+}
+
+.csv-help-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.csv-help-grid p {
+  overflow-wrap: anywhere;
+  margin-top: 8px;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+@media (max-width: 920px) {
+  .csv-help-grid {
+    grid-template-columns: 1fr;
+  }
+}
