@@ -261,6 +261,7 @@ export default async function Page({
           endDate: t("endDate"),
           renewalDate: t("renewalDate"),
           cancelByDate: t("cancelByDate"),
+          contractDates: t("contractDates"),
           alertDays: t("alertDays"),
           notes: t("notes"),
           submit: addContractLabel || t("addContract"),

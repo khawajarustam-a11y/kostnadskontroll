@@ -22,6 +22,7 @@ type Labels = {
   endDate: string;
   renewalDate: string;
   cancelByDate: string;
+  contractDates: string;
   alertDays: string;
   notes: string;
   submit: string;
@@ -176,30 +177,34 @@ export default function ContractQuickForm({
 
         <div className="form-section">
           <div className="form-section-title">{labels.title}</div>
-          <div className="form-grid form-grid-3">
-            <input name="name" placeholder={labels.name} required />
-            <input name="supplier" placeholder={labels.supplier} />
-            <label className="inline-field">
+          <div className="quick-contract-grid">
+            <label className="field-label">
+              <span>{labels.name}</span>
+              <input name="name" required />
+            </label>
+            <label className="field-label">
+              <span>{labels.supplier}</span>
+              <input name="supplier" />
+            </label>
+            <label className="field-label">
+              <span>{labels.pricePerMonth}</span>
               <input
                 name="pricePerMonth"
                 type="number"
                 min="0"
                 step="0.01"
-                placeholder={labels.pricePerMonth}
               />
             </label>
-          </div>
-          <div className="form-grid form-grid-3 compact-grid">
-            <label className="stack" style={{ gap: 4 }}>
-              <span className="muted">{labels.currency}</span>
+            <label className="field-label">
+              <span>{labels.currency}</span>
               <select name="currency" defaultValue={defaultCurrency}>
                 <option value="USD">USD</option>
                 <option value="NOK">NOK</option>
                 <option value="EUR">EUR</option>
               </select>
             </label>
-            <label className="stack" style={{ gap: 4 }}>
-              <span className="muted">{labels.alertDays}</span>
+            <label className="field-label">
+              <span>{labels.alertDays}</span>
               <input
                 name="alertDays"
                 type="number"
@@ -208,12 +213,15 @@ export default function ContractQuickForm({
                 defaultValue={defaultAlertDays}
               />
             </label>
-            <input name="notes" placeholder={labels.notes} />
+            <label className="field-label field-label-wide">
+              <span>{labels.notes}</span>
+              <input name="notes" />
+            </label>
           </div>
         </div>
 
         <div className="form-section">
-          <div className="form-section-title">{labels.cancelByDate}</div>
+          <div className="form-section-title">{labels.contractDates}</div>
           <div className="form-grid form-grid-4">
             <label className="stack" style={{ gap: 4 }}>
               <span className="muted">{labels.startDate}</span>

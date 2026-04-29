@@ -983,3 +983,41 @@ button.ghost {
     grid-template-columns: 1fr;
   }
 }
+
+
+.quick-contract-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px 14px;
+}
+
+.field-label {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.field-label input,
+.field-label select {
+  width: 100%;
+  min-height: 42px;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.field-label-wide {
+  grid-column: span 1;
+}
+
+@media (max-width: 920px) {
+  .quick-contract-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .field-label-wide {
+    grid-column: auto;
+  }
+}
