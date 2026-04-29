@@ -1,14 +1,22 @@
-import { Currency } from "@prisma/client";
+import { Currency, LedgerEntryType } from "@prisma/client";
 
-type ExtractedContract = {
+export type DocumentImportType = "contracts" | "costs" | "ledger";
+
+export type ExtractedDocumentImport = {
   name?: string;
   supplier?: string;
+  category?: string;
+  description?: string;
+  amount?: number;
   pricePerMonth?: number;
   currency?: Currency;
+  frequency?: string;
+  type?: LedgerEntryType;
   startDate?: string;
   endDate?: string;
   renewalDate?: string;
   cancelByDate?: string;
+  entryDate?: string;
   alertDays?: number;
   notes?: string;
 };
@@ -43,24 +51,52 @@ function asCurrency(value: unknown): Currency | undefined {
   return undefined;
 }
 
-function cleanExtraction(value: unknown): ExtractedContract | null {
-  if (!value || typeof value !== "object") return null;
-  const raw = value as Record<string, unknown>;
-  const contract: ExtractedContract = {};
-  if (typeof raw.name === "string" && raw.name.trim()) contract.name = raw.name.trim();
-  if (typeof raw.supplier === "string" && raw.supplier.trim()) contract.supplier = raw.supplier.trim();
-  if (typeof raw.notes === "string" && raw.notes.trim()) contract.notes = raw.notes.trim();
-  if (typeof raw.pricePerMonth === "number" && raw.pricePerMonth > 0) contract.pricePerMonth = raw.pricePerMonth;
-  const currency = asCurrency(raw.currency);
-  if (currency) contract.currency = currency;
-  for (const key of ["startDate", "endDate", "renewalDate", "cancelByDate"] as const) {
-    if (typeof raw[key] === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw[key])) contract[key] = raw[key];
-  }
-  if (typeof raw.alertDays === "number" && raw.alertDays >= 0 && raw.alertDays <= 365) contract.alertDays = raw.alertDays;
-  return contract.name ? contract : null;
+function asLedgerType(value: unknown): LedgerEntryType | undefined {
+  if (value === "INCOME" || value === "EXPENSE") return value;
+  return undefined;
 }
 
-export async function extractContractFromDocument(file: File): Promise<ExtractedContract | null> {
+function cleanExtraction(value: unknown, importType: DocumentImportType): ExtractedDocumentImport | null {
+  if (!value || typeof value !== "object") return null;
+  const raw = value as Record<string, unknown>;
+  const item: ExtractedDocumentImport = {};
+
+  for (const key of ["name", "supplier", "category", "description", "frequency", "notes"] as const) {
+    if (typeof raw[key] === "string" && raw[key].trim()) item[key] = raw[key].trim();
+  }
+
+  for (const key of ["amount", "pricePerMonth"] as const) {
+    if (typeof raw[key] === "number" && raw[key] > 0) item[key] = raw[key];
+  }
+
+  const currency = asCurrency(raw.currency);
+  if (currency) item.currency = currency;
+  const ledgerType = asLedgerType(raw.type);
+  if (ledgerType) item.type = ledgerType;
+
+  for (const key of ["startDate", "endDate", "renewalDate", "cancelByDate", "entryDate"] as const) {
+    if (typeof raw[key] === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw[key])) item[key] = raw[key];
+  }
+
+  if (typeof raw.alertDays === "number" && raw.alertDays >= 0 && raw.alertDays <= 365) item.alertDays = raw.alertDays;
+
+  if (importType === "contracts" && !item.name) return null;
+  if (importType === "costs" && (!item.name || !item.amount)) return null;
+  if (importType === "ledger" && (!item.amount || !item.entryDate)) return null;
+  return item;
+}
+
+function instructionFor(importType: DocumentImportType) {
+  if (importType === "contracts") {
+    return "Extract one contract or subscription. Required if visible: name, supplier, recurring monthly price, currency, start/end/renewal/cancel-by dates, alert days, notes.";
+  }
+  if (importType === "costs") {
+    return "Extract one recurring cost. Required if visible: name, supplier, category, amount, currency, frequency, start date, notes. amount is the recurring amount for the selected frequency.";
+  }
+  return "Extract one accounting ledger entry. Required if visible: type INCOME or EXPENSE, amount, currency, category, description, entry date.";
+}
+
+export async function extractFromDocument(file: File, importType: DocumentImportType): Promise<ExtractedDocumentImport | null> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return null;
 
@@ -74,7 +110,7 @@ export async function extractContractFromDocument(file: File): Promise<Extracted
   const content: Array<Record<string, unknown>> = [
     {
       type: "input_text",
-      text: "Extract one contract/subscription from this user-provided document. Return JSON only. Use null when a field is unknown. Dates must be YYYY-MM-DD. pricePerMonth should be the recurring monthly amount when possible. currency must be USD, NOK, or EUR.",
+      text: `${instructionFor(importType)} Return JSON only. Use null when a field is unknown. Dates must be YYYY-MM-DD. currency must be USD, NOK, or EUR.`,
     },
   ];
 
@@ -98,7 +134,7 @@ export async function extractContractFromDocument(file: File): Promise<Extracted
       text: {
         format: {
           type: "json_schema",
-          name: "contract_extraction",
+          name: "document_import_extraction",
           strict: true,
           schema: {
             type: "object",
@@ -106,16 +142,22 @@ export async function extractContractFromDocument(file: File): Promise<Extracted
             properties: {
               name: { type: ["string", "null"] },
               supplier: { type: ["string", "null"] },
+              category: { type: ["string", "null"] },
+              description: { type: ["string", "null"] },
+              amount: { type: ["number", "null"] },
               pricePerMonth: { type: ["number", "null"] },
               currency: { type: ["string", "null"], enum: ["USD", "NOK", "EUR", null] },
+              frequency: { type: ["string", "null"] },
+              type: { type: ["string", "null"], enum: ["INCOME", "EXPENSE", null] },
               startDate: { type: ["string", "null"] },
               endDate: { type: ["string", "null"] },
               renewalDate: { type: ["string", "null"] },
               cancelByDate: { type: ["string", "null"] },
+              entryDate: { type: ["string", "null"] },
               alertDays: { type: ["number", "null"] },
               notes: { type: ["string", "null"] },
             },
-            required: ["name", "supplier", "pricePerMonth", "currency", "startDate", "endDate", "renewalDate", "cancelByDate", "alertDays", "notes"],
+            required: ["name", "supplier", "category", "description", "amount", "pricePerMonth", "currency", "frequency", "type", "startDate", "endDate", "renewalDate", "cancelByDate", "entryDate", "alertDays", "notes"],
           },
         },
       },
@@ -128,5 +170,5 @@ export async function extractContractFromDocument(file: File): Promise<Extracted
 
   const text = getOutputText(await response.json());
   if (!text) return null;
-  return cleanExtraction(JSON.parse(text));
+  return cleanExtraction(JSON.parse(text), importType);
 }
