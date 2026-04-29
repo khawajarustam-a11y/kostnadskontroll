@@ -1200,3 +1200,12 @@ button.ghost {
     grid-template-columns: 1fr;
   }
 }
+
+.import-config-error {
+  display: grid;
+  gap: 6px;
+}
+
+.import-config-error p {
+  margin: 0;
+}

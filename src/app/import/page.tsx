@@ -301,6 +301,12 @@ export default async function Page({
     const settings = await withTiming("import.settings", () => getSettingsCached(companyId));
     const { t } = getTranslations(settings?.language);
     const { status, count } = searchParams ? await searchParams : {};
+    const openAiKey = process.env.OPENAI_API_KEY?.trim() ?? "";
+    const aiStatus = openAiKey
+      ? openAiKey.startsWith("sk-")
+        ? t("aiKeyLooksValid")
+        : t("aiKeyWrongFormat")
+      : t("aiKeyMissing");
 
     return (
       <div className="page">
@@ -323,7 +329,10 @@ export default async function Page({
           <p className="form-error">{t("importError")}</p>
         ) : null}
         {status === "missing_ai" ? (
-          <p className="form-error">{t("missingAiKey")}</p>
+          <div className="form-error import-config-error">
+            <p>{t("missingAiKey")}</p>
+            <p>{t("aiKeyStatus")}: {aiStatus}</p>
+          </div>
         ) : null}
         {status === "no_extraction" ? (
           <p className="form-error">{t("noExtraction")}</p>
