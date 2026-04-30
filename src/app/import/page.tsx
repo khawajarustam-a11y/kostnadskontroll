@@ -4,9 +4,9 @@ import { redirect } from "next/navigation";
 import { FilePicker } from "@/components/FilePicker";
 import { getSettingsCached } from "@/lib/cached-data";
 import { getComputedStatus } from "@/lib/contract-risk";
-import { DocumentImportType, extractFromDocument } from "@/lib/document-import";
+import { DocumentImportError, DocumentImportType, extractFromDocument } from "@/lib/document-import";
 import { convertWithUsdRates, getUsdRates } from "@/lib/currency";
-import { getTranslations } from "@/lib/i18n";
+import { getTranslations, TranslationKey } from "@/lib/i18n";
 import { withRequestContext, withTiming } from "@/lib/observability";
 import { prisma } from "@/lib/prisma";
 import { requireCompanyId } from "@/lib/session";
@@ -208,7 +208,13 @@ async function importDocument(formData: FormData) {
   const settings = await getSettingsCached(companyId);
   const defaultCurrency: Currency = settings?.displayCurrency ?? "USD";
   const defaultAlertDays = settings?.defaultAlertDays ?? 30;
-  const extracted = await extractFromDocument(file, importType);
+  let extracted;
+  try {
+    extracted = await extractFromDocument(file, importType);
+  } catch (error) {
+    const code = error instanceof DocumentImportError ? error.code : "unknown";
+    redirect(`/import?status=ai_error&code=${code}`);
+  }
   if (!extracted?.name) {
     redirect("/import?status=no_extraction");
   }
@@ -294,13 +300,13 @@ async function importDocument(formData: FormData) {
 export default async function Page({
   searchParams,
 }: {
-  searchParams?: Promise<{ status?: string; count?: string }>;
+  searchParams?: Promise<{ status?: string; count?: string; code?: string }>;
 }) {
   const companyId = await requireCompanyId();
   return withRequestContext({ route: "/import", companyId }, async () => {
     const settings = await withTiming("import.settings", () => getSettingsCached(companyId));
     const { t } = getTranslations(settings?.language);
-    const { status, count } = searchParams ? await searchParams : {};
+    const { status, count, code } = searchParams ? await searchParams : {};
     const openAiKey = process.env.OPENAI_API_KEY?.trim() ?? "";
     const detectedOpenAiKeys = Object.keys(process.env)
       .filter((key) => key.toUpperCase().includes("OPENAI") || key.toUpperCase().includes("OPEN_AI"))
@@ -311,6 +317,16 @@ export default async function Page({
         ? t("aiKeyLooksValid")
         : t("aiKeyWrongFormat")
       : t("aiKeyMissing");
+    const aiErrorKeys: Record<string, TranslationKey> = {
+      invalid_key: "aiError_invalid_key",
+      forbidden: "aiError_forbidden",
+      rate_limited: "aiError_rate_limited",
+      openai_down: "aiError_openai_down",
+      request_failed: "aiError_request_failed",
+      bad_response: "aiError_bad_response",
+      unknown: "aiError_unknown",
+    };
+    const aiErrorKey = aiErrorKeys[code ?? "unknown"] ?? "aiError_unknown";
 
     return (
       <div className="page">
@@ -342,6 +358,9 @@ export default async function Page({
         ) : null}
         {status === "no_extraction" ? (
           <p className="form-error">{t("noExtraction")}</p>
+        ) : null}
+        {status === "ai_error" ? (
+          <p className="form-error">{t("aiExtractionError")}: {t(aiErrorKey)}</p>
         ) : null}
 
         <section className="panel import-panel">

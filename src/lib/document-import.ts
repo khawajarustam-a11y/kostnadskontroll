@@ -2,6 +2,12 @@ import { Currency, LedgerEntryType } from "@prisma/client";
 
 export type DocumentImportType = "contracts" | "costs" | "ledger";
 
+export class DocumentImportError extends Error {
+  constructor(public code: string) {
+    super(code);
+  }
+}
+
 export type ExtractedDocumentImport = {
   name?: string;
   supplier?: string;
@@ -165,10 +171,18 @@ export async function extractFromDocument(file: File, importType: DocumentImport
   });
 
   if (!response.ok) {
-    throw new Error(`Document extraction failed: ${response.status} ${await response.text()}`);
+    if (response.status === 401) throw new DocumentImportError("invalid_key");
+    if (response.status === 403) throw new DocumentImportError("forbidden");
+    if (response.status === 429) throw new DocumentImportError("rate_limited");
+    if (response.status >= 500) throw new DocumentImportError("openai_down");
+    throw new DocumentImportError("request_failed");
   }
 
   const text = getOutputText(await response.json());
   if (!text) return null;
-  return cleanExtraction(JSON.parse(text), importType);
+  try {
+    return cleanExtraction(JSON.parse(text), importType);
+  } catch {
+    throw new DocumentImportError("bad_response");
+  }
 }
