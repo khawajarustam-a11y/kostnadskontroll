@@ -1276,3 +1276,48 @@ button.ghost {
   color: var(--ink);
   font: inherit;
 }
+
+.automation-status-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+  gap: 18px;
+  align-items: center;
+  margin-top: 22px;
+}
+
+.automation-status {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(248, 250, 252, 0.72);
+}
+
+.automation-status p {
+  margin: 0;
+  color: var(--muted);
+  font-weight: 650;
+}
+
+.automation-status-on {
+  border-color: rgba(22, 163, 74, 0.32);
+  background: rgba(22, 163, 74, 0.06);
+}
+
+.automation-status-off {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.badge-warning {
+  color: #92400e;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+@media (max-width: 920px) {
+  .automation-status-panel {
+    grid-template-columns: 1fr;
+  }
+}

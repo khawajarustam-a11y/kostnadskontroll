@@ -50,8 +50,16 @@ function riskLabel(kind: ContractRiskKind): string {
   return "Expired contract";
 }
 
+function appActionUrl() {
+  const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  if (!appUrl) return null;
+  const normalized = appUrl.startsWith("http") ? appUrl : `https://${appUrl}`;
+  return `${normalized.replace(/\/$/, "")}/action-required`;
+}
+
 function buildReminderEmail(company: ReminderCompany, items: ReminderItem[]) {
   const subject = `${items.length} contract reminder${items.length === 1 ? "" : "s"} need attention`;
+  const actionUrl = appActionUrl();
   const rows = items
     .map((item) => {
       const supplier = item.contract.supplier ? ` from ${item.contract.supplier}` : "";
@@ -65,6 +73,7 @@ function buildReminderEmail(company: ReminderCompany, items: ReminderItem[]) {
       <h1 style="font-size:22px;margin-bottom:8px">Action required in ${company.name}</h1>
       <p>These contracts may renew, expire, or pass a cancellation deadline soon.</p>
       <ul>${rows}</ul>
+      ${actionUrl ? `<p><a href="${actionUrl}" style="display:inline-block;background:#ff6433;color:white;text-decoration:none;padding:12px 18px;border-radius:8px;font-weight:700">Review action items</a></p>` : ""}
       <p>Open Kostnadskontroll and review the Action Required page before the deadline.</p>
     </div>
   `;
@@ -78,7 +87,7 @@ function buildReminderEmail(company: ReminderCompany, items: ReminderItem[]) {
       return `${item.contract.name}${supplier} - ${riskLabel(item.kind)} ${formatDate(item.dueDate)} (${days}). Possible charge: ${formatMoney(item.contract)}.`;
     }),
     "",
-    "Open Kostnadskontroll and review the Action Required page before the deadline.",
+    actionUrl ? `Open action items: ${actionUrl}` : "Open Kostnadskontroll and review the Action Required page before the deadline.",
   ].join("\n");
 
   return { subject, html, text };
@@ -108,7 +117,7 @@ async function sendEmail(to: string, subject: string, html: string, text: string
   return { skipped: false };
 }
 
-export async function runDailyContractReminders(now = new Date()) {
+export async function runDailyContractReminders(now = new Date(), options: { dryRun?: boolean } = {}) {
   const companies = await prisma.company.findMany({
     include: {
       settings: { select: { defaultAlertDays: true } },
@@ -151,6 +160,10 @@ export async function runDailyContractReminders(now = new Date()) {
     const email = buildReminderEmail(company, items);
 
     for (const user of company.users) {
+      if (options.dryRun) {
+        emailsSkipped += 1;
+        continue;
+      }
       const result = await sendEmail(user.email, email.subject, email.html, email.text);
       if (result.skipped) emailsSkipped += 1;
       else emailsSent += 1;
@@ -163,5 +176,6 @@ export async function runDailyContractReminders(now = new Date()) {
     emailsSent,
     emailsSkipped,
     configured: Boolean(process.env.RESEND_API_KEY && process.env.REMINDER_FROM_EMAIL),
+    dryRun: Boolean(options.dryRun),
   };
 }

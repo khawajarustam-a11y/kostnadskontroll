@@ -16,7 +16,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const result = await runDailyContractReminders();
+  const dryRun = request.nextUrl.searchParams.get("dryRun") === "1";
+  const result = await runDailyContractReminders(new Date(), { dryRun });
   return NextResponse.json(result);
 }
 

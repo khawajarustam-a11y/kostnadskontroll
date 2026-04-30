@@ -56,6 +56,12 @@ export default async function Page() {
   );
   const { t, language } = getTranslations(settings?.language);
   const saveLabel = t("save") || (language === "NO" ? "Lagre" : "Save");
+  const reminderConfigured = Boolean(process.env.RESEND_API_KEY && process.env.REMINDER_FROM_EMAIL && process.env.CRON_SECRET);
+  const reminderNeeds = [
+    !process.env.RESEND_API_KEY ? "RESEND_API_KEY" : null,
+    !process.env.REMINDER_FROM_EMAIL ? "REMINDER_FROM_EMAIL" : null,
+    !process.env.CRON_SECRET ? "CRON_SECRET" : null,
+  ].filter((item): item is string => Boolean(item));
 
   return (
     <div className="page">
@@ -81,6 +87,21 @@ export default async function Page() {
           dark: "Dark",
         }}
       />
+
+      <section className="panel automation-status-panel">
+        <div>
+          <p className="eyebrow">{t("automation")}</p>
+          <h2 className="section-title">{t("emailReminderAutomation")}</h2>
+          <p className="muted">{t("emailReminderAutomationText")}</p>
+        </div>
+        <div className={reminderConfigured ? "automation-status automation-status-on" : "automation-status automation-status-off"}>
+          <span className={reminderConfigured ? "badge badge-safe" : "badge badge-warning"}>
+            {reminderConfigured ? t("active") : t("notConfigured")}
+          </span>
+          <strong>{t("dailyReminderSchedule")}</strong>
+          {reminderNeeds.length > 0 ? <p>{t("missingVariables")}: {reminderNeeds.join(", ")}</p> : <p>{t("readyToSendReminders")}</p>}
+        </div>
+      </section>
     </div>
   );
   });
