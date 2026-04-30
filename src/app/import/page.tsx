@@ -1,18 +1,12 @@
-import { Currency, LedgerEntryType } from "@prisma/client";
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { FilePicker } from "@/components/FilePicker";
 import { SubmitButton } from "@/components/SubmitButton";
 import { getSettingsCached } from "@/lib/cached-data";
-import { getComputedStatus } from "@/lib/contract-risk";
 import { DocumentImportError, DocumentImportType, extractFromDocument } from "@/lib/document-import";
-import { convertWithUsdRates, getUsdRates } from "@/lib/currency";
-import { setImportReviewDraft } from "@/lib/import-review";
+import { setCsvImportReviewDraft, setImportReviewDraft } from "@/lib/import-review";
 import { getTranslations, TranslationKey } from "@/lib/i18n";
 import { withRequestContext, withTiming } from "@/lib/observability";
-import { prisma } from "@/lib/prisma";
 import { requireCompanyId } from "@/lib/session";
-import { clampAlertDays, parseCurrency, parseOptionalDate, parsePositiveAmount } from "@/lib/validation";
 
 export const runtime = "nodejs";
 
@@ -66,18 +60,11 @@ function parseCsv(text: string): Record<string, string>[] {
   });
 }
 
-function pick(row: Record<string, string>, keys: string[]): string {
-  for (const key of keys) {
-    const value = row[key.toLowerCase()];
-    if (value) return value;
-  }
-  return "";
-}
 
 async function importCsv(formData: FormData) {
   "use server";
-  const companyId = await requireCompanyId();
-  const importType = String(formData.get("importType") ?? "") as ImportType;
+  await requireCompanyId();
+  const importType = String(formData.get("importType") ?? "contracts") as ImportType;
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
     redirect("/import?status=missing_file");
@@ -87,112 +74,16 @@ async function importCsv(formData: FormData) {
   if (rows.length === 0) {
     redirect("/import?status=empty_file");
   }
-
-  const settings = await getSettingsCached(companyId);
-  const defaultCurrency: Currency = settings?.displayCurrency ?? "USD";
-  const defaultAlertDays = settings?.defaultAlertDays ?? 30;
-  const usdRates = await getUsdRates();
-  const now = new Date();
-  let imported = 0;
-
-  if (importType === "contracts") {
-    for (const row of rows) {
-      const name = pick(row, ["name", "contract", "title"]);
-      if (!name) continue;
-      const supplier = pick(row, ["supplier", "vendor", "company"]);
-      const startDate = parseOptionalDate(pick(row, ["startdate", "start_date", "start"]));
-      const endDate = parseOptionalDate(pick(row, ["enddate", "end_date", "end"]));
-      const renewalDate = parseOptionalDate(pick(row, ["renewaldate", "renewal_date", "renewal"]));
-      const cancelByDate = parseOptionalDate(pick(row, ["cancelbydate", "cancel_by_date", "cancelby", "cancel_by"]));
-      if (startDate === "invalid" || endDate === "invalid" || renewalDate === "invalid" || cancelByDate === "invalid") continue;
-      const pricePerMonth = parsePositiveAmount(pick(row, ["pricepermonth", "price_per_month", "monthlyprice", "monthly_price", "amount"]));
-      const currency = parseCurrency(pick(row, ["currency"])) ?? defaultCurrency;
-      const alertDays = clampAlertDays(pick(row, ["alertdays", "alert_days"]), defaultAlertDays);
-      const notes = pick(row, ["notes", "note"]);
-      const computedStatus = getComputedStatus(endDate, cancelByDate, now);
-
-      await prisma.contract.create({
-        data: {
-          companyId,
-          name,
-          supplier: supplier || null,
-          startDate,
-          endDate,
-          renewalDate,
-          cancelByDate,
-          status: computedStatus,
-          pricePerMonth,
-          currency,
-          alertDays,
-          notes: notes || null,
-        },
-      });
-      imported += 1;
-    }
-    revalidatePath("/contracts");
-    revalidatePath("/dashboard");
-    revalidatePath("/action-required");
+  if (rows.length > 20) {
+    redirect("/import?status=csv_too_large");
   }
 
-  if (importType === "costs") {
-    for (const row of rows) {
-      const name = pick(row, ["name", "cost", "title"]);
-      const amount = parsePositiveAmount(pick(row, ["amount", "price", "cost"]));
-      const currency = parseCurrency(pick(row, ["currency"])) ?? defaultCurrency;
-      if (!name || amount === null) continue;
-      const supplier = pick(row, ["supplier", "vendor", "company"]);
-      const category = pick(row, ["category"]);
-      const frequency = (pick(row, ["frequency", "period"]) || "MONTHLY").toUpperCase();
-      const startDate = parseOptionalDate(pick(row, ["startdate", "start_date", "start"]));
-      if (startDate === "invalid") continue;
-      const amountUsd = convertWithUsdRates(amount, currency, "USD", usdRates);
-      await prisma.cost.create({
-        data: {
-          companyId,
-          name,
-          supplier: supplier || null,
-          category: category || null,
-          amount,
-          currency,
-          amountUsd,
-          frequency,
-          startDate,
-        },
-      });
-      imported += 1;
-    }
-    revalidatePath("/costs");
-    revalidatePath("/dashboard");
-  }
-
-  if (importType === "ledger") {
-    for (const row of rows) {
-      const amount = parsePositiveAmount(pick(row, ["amount", "price"]));
-      const currency = parseCurrency(pick(row, ["currency"])) ?? defaultCurrency;
-      const date = parseOptionalDate(pick(row, ["date", "entrydate", "entry_date"]));
-      if (amount === null || date === null || date === "invalid") continue;
-      const rawType = pick(row, ["type"]).toUpperCase();
-      const type: LedgerEntryType = rawType === "INCOME" ? "INCOME" : "EXPENSE";
-      const category = pick(row, ["category"]);
-      const description = pick(row, ["description", "notes", "note"]);
-      await prisma.ledgerEntry.create({
-        data: {
-          companyId,
-          type,
-          amount,
-          currency,
-          category: category || null,
-          description: description || null,
-          entryDate: date,
-        },
-      });
-      imported += 1;
-    }
-    revalidatePath("/ledger");
-    revalidatePath("/dashboard");
-  }
-
-  redirect("/import?status=imported&count=" + imported);
+  await setCsvImportReviewDraft({
+    type: importType,
+    sourceName: file.name || "CSV file",
+    rows,
+  });
+  redirect("/import/csv-review");
 }
 
 async function importDocument(formData: FormData) {
@@ -281,6 +172,9 @@ export default async function Page({
         {status === "missing_file" || status === "empty_file" ? (
           <p className="form-error">{t("importError")}</p>
         ) : null}
+        {status === "csv_too_large" ? (
+          <p className="form-error">{t("csvTooLarge")}</p>
+        ) : null}
         {status === "missing_ai" ? (
           <div className="form-error import-config-error">
             <p>{t("missingAiKey")}</p>
@@ -297,6 +191,9 @@ export default async function Page({
         ) : null}
         {status === "review_expired" ? (
           <p className="form-error">{t("reviewImportExpired")}</p>
+        ) : null}
+        {status === "csv_review_expired" ? (
+          <p className="form-error">{t("csvReviewExpired")}</p>
         ) : null}
 
         <section className="panel import-panel">
@@ -316,7 +213,7 @@ export default async function Page({
                 <FilePicker name="file" accept=".csv,text/csv" required chooseLabel={t("chooseFile")} noFileLabel={t("noFileSelected")} />
               </label>
             </div>
-            <SubmitButton className="form-primary" idleLabel={t("importCsv")} pendingLabel={t("importing")} />
+            <SubmitButton className="form-primary" idleLabel={t("previewCsv")} pendingLabel={t("importing")} />
           </form>
         </section>
 

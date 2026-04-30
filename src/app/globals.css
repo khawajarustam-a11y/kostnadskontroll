@@ -1181,6 +1181,41 @@ button.ghost {
   box-shadow: none;
 }
 
+.csv-review-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 8px 0 16px;
+  color: var(--muted);
+  font-weight: 650;
+}
+
+.csv-review-meta span {
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(248, 250, 252, 0.72);
+}
+
+.csv-preview-table-wrap {
+  overflow-x: auto;
+  border-radius: 14px;
+}
+
+.csv-preview-table {
+  min-width: 920px;
+  box-shadow: none;
+}
+
+.csv-preview-table th,
+.csv-preview-table td {
+  white-space: nowrap;
+}
+
+.csv-review-actions {
+  margin-top: 18px;
+}
+
 .csv-help-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
