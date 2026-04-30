@@ -2,6 +2,7 @@ import { Currency, LedgerEntryType } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { FilePicker } from "@/components/FilePicker";
+import { SubmitButton } from "@/components/SubmitButton";
 import { getSettingsCached } from "@/lib/cached-data";
 import { getComputedStatus } from "@/lib/contract-risk";
 import { DocumentImportError, DocumentImportType, extractFromDocument } from "@/lib/document-import";
@@ -380,7 +381,7 @@ export default async function Page({
                 <FilePicker name="file" accept=".csv,text/csv" required chooseLabel={t("chooseFile")} noFileLabel={t("noFileSelected")} />
               </label>
             </div>
-            <button type="submit" className="form-primary">{t("importCsv")}</button>
+            <SubmitButton className="form-primary" idleLabel={t("importCsv")} pendingLabel={t("importing")} />
           </form>
         </section>
 
@@ -403,7 +404,7 @@ export default async function Page({
               </label>
             </div>
             <div className="import-actions-row">
-              <button type="submit" className="form-primary">{t("extractDetails")}</button>
+              <SubmitButton className="form-primary" idleLabel={t("extractDetails")} pendingLabel={t("extracting")} />
               <span className="muted">{t("documentImportNote")}</span>
             </div>
           </form>
