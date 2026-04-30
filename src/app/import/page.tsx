@@ -7,6 +7,7 @@ import { getSettingsCached } from "@/lib/cached-data";
 import { getComputedStatus } from "@/lib/contract-risk";
 import { DocumentImportError, DocumentImportType, extractFromDocument } from "@/lib/document-import";
 import { convertWithUsdRates, getUsdRates } from "@/lib/currency";
+import { setImportReviewDraft } from "@/lib/import-review";
 import { getTranslations, TranslationKey } from "@/lib/i18n";
 import { withRequestContext, withTiming } from "@/lib/observability";
 import { prisma } from "@/lib/prisma";
@@ -196,7 +197,7 @@ async function importCsv(formData: FormData) {
 
 async function importDocument(formData: FormData) {
   "use server";
-  const companyId = await requireCompanyId();
+  await requireCompanyId();
   const importType = String(formData.get("documentImportType") ?? "contracts") as DocumentImportType;
   const file = formData.get("document");
   if (!(file instanceof File) || file.size === 0) {
@@ -206,9 +207,6 @@ async function importDocument(formData: FormData) {
     redirect("/import?status=missing_ai");
   }
 
-  const settings = await getSettingsCached(companyId);
-  const defaultCurrency: Currency = settings?.displayCurrency ?? "USD";
-  const defaultAlertDays = settings?.defaultAlertDays ?? 30;
   let extracted;
   try {
     extracted = await extractFromDocument(file, importType);
@@ -216,86 +214,20 @@ async function importDocument(formData: FormData) {
     const code = error instanceof DocumentImportError ? error.code : "unknown";
     redirect(`/import?status=ai_error&code=${code}`);
   }
-  if (!extracted?.name) {
+  if (!extracted) {
     redirect("/import?status=no_extraction");
   }
 
-  const note = extracted.notes ? `Imported from ${file.name}. ${extracted.notes}` : `Imported from ${file.name}. Please verify the extracted details.`;
-
-  if (importType === "contracts") {
-    const startDate = parseOptionalDate(extracted.startDate ?? "");
-    const endDate = parseOptionalDate(extracted.endDate ?? "");
-    const renewalDate = parseOptionalDate(extracted.renewalDate ?? "");
-    const cancelByDate = parseOptionalDate(extracted.cancelByDate ?? "");
-    if (startDate === "invalid" || endDate === "invalid" || renewalDate === "invalid" || cancelByDate === "invalid") {
-      redirect("/import?status=no_extraction");
-    }
-
-    const now = new Date();
-    await prisma.contract.create({
-      data: {
-        companyId,
-        name: extracted.name,
-        supplier: extracted.supplier || null,
-        pricePerMonth: extracted.pricePerMonth ?? extracted.amount ?? null,
-        currency: extracted.currency ?? defaultCurrency,
-        startDate,
-        endDate,
-        renewalDate,
-        cancelByDate,
-        status: getComputedStatus(endDate, cancelByDate, now),
-        alertDays: extracted.alertDays ?? defaultAlertDays,
-        notes: note,
-      },
-    });
-    revalidatePath("/contracts");
-    revalidatePath("/action-required");
-  }
-
-  if (importType === "costs") {
-    const amount = extracted.amount ?? extracted.pricePerMonth ?? null;
-    if (!extracted.name || amount === null) redirect("/import?status=no_extraction");
-    const startDate = parseOptionalDate(extracted.startDate ?? "");
-    if (startDate === "invalid") redirect("/import?status=no_extraction");
-    const currency = extracted.currency ?? defaultCurrency;
-    const amountUsd = convertWithUsdRates(amount, currency, "USD", await getUsdRates());
-    await prisma.cost.create({
-      data: {
-        companyId,
-        name: extracted.name,
-        supplier: extracted.supplier || null,
-        category: extracted.category || null,
-        amount,
-        currency,
-        amountUsd,
-        frequency: (extracted.frequency || "MONTHLY").toUpperCase(),
-        startDate,
-        notes: note,
-      },
-    });
-    revalidatePath("/costs");
-  }
-
-  if (importType === "ledger") {
-    const amount = extracted.amount ?? extracted.pricePerMonth ?? null;
-    const entryDate = parseOptionalDate(extracted.entryDate ?? extracted.startDate ?? "");
-    if (amount === null || entryDate === null || entryDate === "invalid") redirect("/import?status=no_extraction");
-    await prisma.ledgerEntry.create({
-      data: {
-        companyId,
-        type: extracted.type ?? "EXPENSE",
-        amount,
-        currency: extracted.currency ?? defaultCurrency,
-        category: extracted.category || null,
-        description: extracted.description || extracted.name || note,
-        entryDate,
-      },
-    });
-    revalidatePath("/ledger");
-  }
-
-  revalidatePath("/dashboard");
-  redirect("/import?status=document_imported&count=1");
+  await setImportReviewDraft({
+    type: importType,
+    sourceName: file.name || "document",
+    data: {
+      ...extracted,
+      amount: extracted.amount ?? extracted.pricePerMonth,
+      notes: extracted.notes ? `Imported from ${file.name}. ${extracted.notes}` : `Imported from ${file.name}. Please verify the extracted details.`,
+    },
+  });
+  redirect("/import/review");
 }
 
 export default async function Page({
@@ -362,6 +294,9 @@ export default async function Page({
         ) : null}
         {status === "ai_error" ? (
           <p className="form-error">{t("aiExtractionError")}: {t(aiErrorKey)}</p>
+        ) : null}
+        {status === "review_expired" ? (
+          <p className="form-error">{t("reviewImportExpired")}</p>
         ) : null}
 
         <section className="panel import-panel">

@@ -1209,3 +1209,35 @@ button.ghost {
 .import-config-error p {
   margin: 0;
 }
+
+
+.review-fieldset {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(248, 250, 252, 0.62);
+}
+
+.compact-title {
+  margin-bottom: 14px;
+  font-size: 15px;
+}
+
+.review-date-field {
+  max-width: 360px;
+}
+
+.review-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.field-label textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 96px;
+  color: var(--ink);
+  font: inherit;
+}
