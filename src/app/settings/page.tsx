@@ -17,11 +17,12 @@ async function updateSettings(formData: FormData) {
   const displayCurrency = parseCurrency(formData.get("displayCurrency")) ?? "USD";
   const baseCurrency = parseCurrency(formData.get("baseCurrency")) ?? "USD";
   const defaultAlertDays = clampAlertDays(formData.get("defaultAlertDays"), 30);
+  const timezone = String(formData.get("timezone") ?? "Europe/Oslo");
 
   await prisma.company.upsert({
     where: { id: companyId },
-    update: {},
-    create: { id: companyId, name: "Demo AS" },
+    update: { timezone },
+    create: { id: companyId, name: "Demo AS", timezone },
   });
 
   await prisma.settings.upsert({
@@ -54,6 +55,9 @@ export default async function Page() {
   const settings = await withTiming("settings.load", () =>
     getSettingsCached(companyId)
   );
+  const company = await withTiming("settings.company", () =>
+    prisma.company.findUnique({ where: { id: companyId }, select: { timezone: true } })
+  );
   const { t, language } = getTranslations(settings?.language);
   const saveLabel = t("save") || (language === "NO" ? "Lagre" : "Save");
   const reminderConfigured = Boolean(process.env.RESEND_API_KEY && process.env.REMINDER_FROM_EMAIL && process.env.CRON_SECRET);
@@ -75,11 +79,13 @@ export default async function Page() {
         displayCurrency={settings?.displayCurrency ?? "USD"}
         baseCurrency={settings?.baseCurrency ?? "USD"}
         defaultAlertDays={settings?.defaultAlertDays ?? 30}
+        timezone={company?.timezone ?? "Europe/Oslo"}
         labels={{
           language: t("language"),
           displayCurrency: t("displayCurrency"),
           baseCurrency: t("baseCurrency"),
           alertDays: t("alertDays"),
+          timezone: t("timezone"),
           theme: language === "NO" ? "Tema" : "Theme",
           save: saveLabel,
           system: "System",

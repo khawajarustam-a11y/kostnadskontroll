@@ -17,7 +17,8 @@ export async function GET(request: NextRequest) {
   }
 
   const dryRun = request.nextUrl.searchParams.get("dryRun") === "1";
-  const result = await runDailyContractReminders(new Date(), { dryRun });
+  const ignoreWindow = request.nextUrl.searchParams.get("ignoreWindow") === "1";
+  const result = await runDailyContractReminders(new Date(), { dryRun, ignoreWindow });
   return NextResponse.json(result);
 }
 

@@ -18,6 +18,7 @@ type ReminderContract = Pick<
 type ReminderCompany = {
   id: string;
   name: string;
+  timezone: string;
   settings: Pick<Settings, "defaultAlertDays"> | null;
   contracts: ReminderContract[];
   users: Pick<User, "email">[];
@@ -41,6 +42,23 @@ function formatDate(date: Date): string {
     month: "short",
     day: "numeric",
   }).format(date);
+}
+
+function localHour(timezone: string, now: Date): number | null {
+  try {
+    const hour = new Intl.DateTimeFormat("en-GB", {
+      hour: "2-digit",
+      hour12: false,
+      timeZone: timezone,
+    }).format(now);
+    return Number(hour);
+  } catch {
+    return null;
+  }
+}
+
+function shouldRunForCompany(timezone: string, now: Date, targetHour = 9) {
+  return localHour(timezone || "UTC", now) === targetHour;
 }
 
 function riskLabel(kind: ContractRiskKind): string {
@@ -117,7 +135,7 @@ async function sendEmail(to: string, subject: string, html: string, text: string
   return { skipped: false };
 }
 
-export async function runDailyContractReminders(now = new Date(), options: { dryRun?: boolean } = {}) {
+export async function runDailyContractReminders(now = new Date(), options: { dryRun?: boolean; ignoreWindow?: boolean } = {}) {
   const companies = await prisma.company.findMany({
     include: {
       settings: { select: { defaultAlertDays: true } },
@@ -143,9 +161,14 @@ export async function runDailyContractReminders(now = new Date(), options: { dry
   let reminderItems = 0;
   let emailsSent = 0;
   let emailsSkipped = 0;
+  let companiesSkippedForTimezone = 0;
 
   for (const company of companies) {
     companiesChecked += 1;
+    if (!options.ignoreWindow && !shouldRunForCompany(company.timezone, now)) {
+      companiesSkippedForTimezone += 1;
+      continue;
+    }
     const defaultAlertDays = company.settings?.defaultAlertDays ?? 30;
     const items = company.contracts
       .map((contract) => {
@@ -175,7 +198,9 @@ export async function runDailyContractReminders(now = new Date(), options: { dry
     reminderItems,
     emailsSent,
     emailsSkipped,
+    companiesSkippedForTimezone,
     configured: Boolean(process.env.RESEND_API_KEY && process.env.REMINDER_FROM_EMAIL),
     dryRun: Boolean(options.dryRun),
+    timezoneAware: true,
   };
 }

@@ -11,11 +11,13 @@ type SettingsFormProps = {
   displayCurrency: Currency;
   baseCurrency: Currency;
   defaultAlertDays: number;
+  timezone: string;
   labels: {
     language: string;
     displayCurrency: string;
     baseCurrency: string;
     alertDays: string;
+    timezone: string;
     theme: string;
     save: string;
     system: string;
@@ -30,6 +32,7 @@ export default function SettingsForm({
   displayCurrency,
   baseCurrency,
   defaultAlertDays,
+  timezone,
   labels,
 }: SettingsFormProps) {
   const formRef = useRef<HTMLFormElement>(null);
@@ -84,6 +87,22 @@ export default function SettingsForm({
             onBlur={submitNow}
           />
         </label>
+        <label className="stack">
+          <span>{labels.timezone}</span>
+          <select name="timezone" defaultValue={timezone} onChange={submitNow}>
+            <option value="Europe/Oslo">Europe/Oslo</option>
+            <option value="Europe/Stockholm">Europe/Stockholm</option>
+            <option value="Europe/Copenhagen">Europe/Copenhagen</option>
+            <option value="Europe/London">Europe/London</option>
+            <option value="Europe/Berlin">Europe/Berlin</option>
+            <option value="UTC">UTC</option>
+            <option value="America/New_York">America/New_York</option>
+            <option value="America/Los_Angeles">America/Los_Angeles</option>
+            <option value="Asia/Dubai">Asia/Dubai</option>
+            <option value="Asia/Karachi">Asia/Karachi</option>
+            <option value="Asia/Kolkata">Asia/Kolkata</option>
+          </select>
+        </label>
         <ThemeModeSelect
           label={labels.theme}
           systemLabel={labels.system}
@@ -99,4 +118,3 @@ export default function SettingsForm({
     </form>
   );
 }
-
