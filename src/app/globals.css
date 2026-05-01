@@ -1167,6 +1167,16 @@ button.ghost {
   max-width: 620px;
 }
 
+.import-divider {
+  height: 1px;
+  margin: 24px 0;
+  background: var(--line);
+}
+
+.import-email-text-field {
+  grid-column: span 2;
+}
+
 .import-disabled-grid {
   display: flex;
   gap: 12px;
@@ -1233,6 +1243,10 @@ button.ghost {
 @media (max-width: 920px) {
   .csv-help-grid {
     grid-template-columns: 1fr;
+  }
+
+  .import-email-text-field {
+    grid-column: auto;
   }
 }
 

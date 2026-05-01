@@ -121,6 +121,42 @@ async function importDocument(formData: FormData) {
   redirect("/import/review");
 }
 
+async function importEmailText(formData: FormData) {
+  "use server";
+  await requireCompanyId();
+  const importType = String(formData.get("emailImportType") ?? "contracts") as DocumentImportType;
+  const emailText = String(formData.get("emailText") ?? "").trim();
+  if (emailText.length < 20) {
+    redirect("/import?status=missing_email_text");
+  }
+  if (!process.env.OPENAI_API_KEY) {
+    redirect("/import?status=missing_ai");
+  }
+
+  const file = new File([emailText], "pasted-email.txt", { type: "text/plain" });
+  let extracted;
+  try {
+    extracted = await extractFromDocument(file, importType);
+  } catch (error) {
+    const code = error instanceof DocumentImportError ? error.code : "unknown";
+    redirect(`/import?status=ai_error&code=${code}`);
+  }
+  if (!extracted) {
+    redirect("/import?status=no_extraction");
+  }
+
+  await setImportReviewDraft({
+    type: importType,
+    sourceName: "Pasted email",
+    data: {
+      ...extracted,
+      amount: extracted.amount ?? extracted.pricePerMonth,
+      notes: extracted.notes ? `Imported from pasted email. ${extracted.notes}` : "Imported from pasted email. Please verify the extracted details.",
+    },
+  });
+  redirect("/import/review");
+}
+
 export default async function Page({
   searchParams,
 }: {
@@ -171,6 +207,9 @@ export default async function Page({
         ) : null}
         {status === "missing_file" || status === "empty_file" ? (
           <p className="form-error">{t("importError")}</p>
+        ) : null}
+        {status === "missing_email_text" ? (
+          <p className="form-error">{t("emailTextImportError")}</p>
         ) : null}
         {status === "csv_too_large" ? (
           <p className="form-error">{t("csvTooLarge")}</p>
@@ -238,6 +277,30 @@ export default async function Page({
             <div className="import-actions-row">
               <SubmitButton className="form-primary" idleLabel={t("extractDetails")} pendingLabel={t("extracting")} />
               <span className="muted">{t("documentImportNote")}</span>
+            </div>
+          </form>
+
+          <div className="import-divider" />
+
+          <form action={importEmailText} className="stack">
+            <div className="panel-title compact-title">{t("pasteEmailText")}</div>
+            <div className="form-grid form-grid-3">
+              <label className="field-label">
+                <span>{t("importType")}</span>
+                <select name="emailImportType" defaultValue="contracts">
+                  <option value="contracts">{t("contracts")}</option>
+                  <option value="costs">{t("costs")}</option>
+                  <option value="ledger">{t("accounting")}</option>
+                </select>
+              </label>
+              <label className="field-label field-label-wide import-email-text-field">
+                <span>{t("emailText")}</span>
+                <textarea name="emailText" rows={7} placeholder={t("emailTextPlaceholder")} required />
+              </label>
+            </div>
+            <div className="import-actions-row">
+              <SubmitButton className="form-primary" idleLabel={t("scanEmailText")} pendingLabel={t("extracting")} />
+              <span className="muted">{t("emailTextImportNote")}</span>
             </div>
           </form>
         </section>
