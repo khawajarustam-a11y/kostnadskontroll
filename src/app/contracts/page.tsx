@@ -175,10 +175,10 @@ export default async function Page({
         <p className="muted">{t("contractsSubtitle")}</p>
         <div className="page-actions">
           <Link className="form-primary" href="/contracts/new">
-            {t("addContract")}
+            {t("addContractManually")}
           </Link>
           <Link className="form-secondary" href="/import">
-            {t("importData")}
+            {t("importWithAiCsv")}
           </Link>
         </div>
       </div>
