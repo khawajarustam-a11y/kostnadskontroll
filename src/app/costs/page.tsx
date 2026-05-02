@@ -152,7 +152,7 @@ export default async function Page({
   );
   const { t, language } = getTranslations(settings?.language);
   const baseCurrency: Currency = settings?.baseCurrency ?? "USD";
-  const displayCurrency: Currency = settings?.displayCurrency ?? "USD";
+  const displayCurrency: Currency = settings?.displayCurrency === "NOK" ? "USD" : settings?.displayCurrency ?? "USD";
   const locale = language === "NO" ? "nb-NO" : "en-US";
   const { error, view, filter, sort } = searchParams ? await searchParams : {};
   const errorMessage = error === "invalid_cost" ? t("errorInvalidCost") : null;
@@ -351,7 +351,6 @@ export default async function Page({
           />
           <select name="currency" defaultValue={displayCurrency}>
             <option value="USD">USD</option>
-            <option value="NOK">NOK</option>
             <option value="EUR">EUR</option>
           </select>
           <select name="frequency" defaultValue="MONTHLY">

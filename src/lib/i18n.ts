@@ -546,7 +546,8 @@ const translations = {
 export type TranslationKey = keyof (typeof translations)["EN"];
 
 export function getTranslations(language?: string) {
-  const lang = language === "NO" ? "NO" : "EN";
+  const norwegianEnabled = process.env.ENABLE_NORWEGIAN === "true";
+  const lang = norwegianEnabled && language === "NO" ? "NO" : "EN";
   return {
     language: lang as Language,
     t: (key: TranslationKey) => translations[lang][key],

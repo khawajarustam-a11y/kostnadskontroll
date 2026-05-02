@@ -86,8 +86,7 @@ export default async function Page({
         </label>
         <label className="stack">
           <span>{t("currency")}</span>
-          <select name="currency" defaultValue={entry.currency}>
-            <option value="NOK">NOK</option>
+          <select name="currency" defaultValue={entry.currency === "NOK" ? "USD" : entry.currency}>
             <option value="USD">USD</option>
             <option value="EUR">EUR</option>
           </select>

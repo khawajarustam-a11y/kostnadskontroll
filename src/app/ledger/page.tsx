@@ -99,7 +99,7 @@ export default async function Page({
   const locale = language === "NO" ? "nb-NO" : "en-US";
   const { view } = searchParams ? await searchParams : {};
   const showDeleted = view === "deleted";
-  const displayCurrency: Currency = settings?.displayCurrency ?? "NOK";
+  const displayCurrency: Currency = settings?.displayCurrency === "NOK" ? "USD" : settings?.displayCurrency ?? "USD";
   const addEntryLabel = t("addEntry") || (language === "NO" ? "Legg til" : "Add entry");
   const exportLabel = t("exportCsv") || "Export CSV";
   const usdRates = await getUsdRates();
@@ -191,8 +191,7 @@ export default async function Page({
             <option value="EXPENSE">{t("expense")}</option>
           </select>
           <input name="amount" type="number" step="0.01" placeholder={t("amount")} required />
-          <select name="currency" defaultValue="NOK">
-            <option value="NOK">NOK</option>
+          <select name="currency" defaultValue={displayCurrency}>
             <option value="USD">USD</option>
             <option value="EUR">EUR</option>
           </select>

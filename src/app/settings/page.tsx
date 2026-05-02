@@ -13,7 +13,7 @@ export const runtime = "nodejs";
 async function updateSettings(formData: FormData) {
   "use server";
   const companyId = await requireCompanyId();
-  const language = String(formData.get("language") ?? "NO");
+  const language = String(formData.get("language") ?? "EN");
   const displayCurrency = parseCurrency(formData.get("displayCurrency")) ?? "USD";
   const baseCurrency = parseCurrency(formData.get("baseCurrency")) ?? "USD";
   const defaultAlertDays = clampAlertDays(formData.get("defaultAlertDays"), 30);

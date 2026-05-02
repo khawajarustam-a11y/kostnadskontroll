@@ -12,7 +12,7 @@ import { requireCompanyId } from "@/lib/session";
 
 export const runtime = "nodejs";
 
-const currencies: Currency[] = ["USD", "NOK", "EUR"];
+const currencies: Currency[] = ["USD", "EUR"];
 
 async function saveImportReview(formData: FormData) {
   "use server";
@@ -57,7 +57,7 @@ export default async function Page({
     const { status } = searchParams ? await searchParams : {};
     const data = draft.data;
     const amount = data.amount ?? data.pricePerMonth ?? "";
-    const currency = data.currency ?? settings?.displayCurrency ?? "USD";
+    const currency = data.currency === "NOK" ? "USD" : data.currency ?? settings?.displayCurrency ?? "USD";
     const locale = language === "NO" ? "nb-NO" : "en-US";
     const amountNumber = Number(amount);
     const readableAmount = Number.isFinite(amountNumber)

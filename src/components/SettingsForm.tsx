@@ -38,6 +38,8 @@ export default function SettingsForm({
   const formRef = useRef<HTMLFormElement>(null);
 
   const submitNow = () => formRef.current?.requestSubmit();
+  const visibleDisplayCurrency = displayCurrency === "NOK" ? "USD" : displayCurrency;
+  const visibleBaseCurrency = baseCurrency === "NOK" ? "USD" : baseCurrency;
 
   return (
     <form action={action} className="panel stack" ref={formRef}>
@@ -49,7 +51,6 @@ export default function SettingsForm({
             defaultValue={language}
             onChange={submitNow}
           >
-            <option value="NO">NO</option>
             <option value="EN">EN</option>
           </select>
         </label>
@@ -57,11 +58,10 @@ export default function SettingsForm({
           <span>{labels.displayCurrency}</span>
           <select
             name="displayCurrency"
-            defaultValue={displayCurrency}
+            defaultValue={visibleDisplayCurrency}
             onChange={submitNow}
           >
             <option value="USD">USD</option>
-            <option value="NOK">NOK</option>
             <option value="EUR">EUR</option>
           </select>
         </label>
@@ -69,11 +69,10 @@ export default function SettingsForm({
           <span>{labels.baseCurrency}</span>
           <select
             name="baseCurrency"
-            defaultValue={baseCurrency}
+            defaultValue={visibleBaseCurrency}
             onChange={submitNow}
           >
             <option value="USD">USD</option>
-            <option value="NOK">NOK</option>
             <option value="EUR">EUR</option>
           </select>
         </label>
