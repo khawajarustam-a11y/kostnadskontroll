@@ -1437,3 +1437,147 @@ button.ghost {
     grid-template-columns: 1fr;
   }
 }
+
+.public-page {
+  max-width: 1080px;
+}
+
+.public-hero {
+  display: grid;
+  gap: 18px;
+  padding: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 22px;
+  background:
+    radial-gradient(520px 240px at 100% 0%, rgba(255, 107, 53, 0.12), transparent 62%),
+    radial-gradient(560px 260px at 0% 0%, rgba(37, 99, 235, 0.1), transparent 65%),
+    rgba(255, 255, 255, 0.74);
+  box-shadow: var(--shadow);
+}
+
+.public-hero h1 {
+  max-width: 820px;
+  font-size: 44px;
+  line-height: 1.05;
+}
+
+.public-hero-copy {
+  max-width: 760px;
+  color: var(--muted);
+  font-size: 19px;
+  line-height: 1.55;
+}
+
+.public-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 18px 0;
+}
+
+.public-grid > div,
+.public-feedback-strip {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: var(--shadow);
+}
+
+.public-grid > div {
+  padding: 18px;
+}
+
+.public-grid span {
+  display: inline-grid;
+  width: 28px;
+  height: 28px;
+  margin-bottom: 16px;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--accent);
+  color: white;
+  font-weight: 800;
+}
+
+.public-grid h2,
+.public-feedback-strip h2 {
+  font-size: 20px;
+}
+
+.public-grid p {
+  margin-top: 8px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.public-feedback-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 20px;
+}
+
+.feedback-form {
+  display: grid;
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.feedback-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.feedback-message textarea {
+  min-height: 180px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  font: inherit;
+}
+
+.feedback-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.feedback-status {
+  display: grid;
+  gap: 4px;
+  margin: 16px 0;
+  padding: 14px 16px;
+  border-radius: 14px;
+  font-weight: 700;
+}
+
+.feedback-status-success {
+  border: 1px solid rgba(22, 163, 74, 0.28);
+  background: rgba(22, 163, 74, 0.08);
+  color: #166534;
+}
+
+.feedback-status-warning {
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.1);
+  color: #92400e;
+}
+
+@media (max-width: 920px) {
+  .public-hero h1 {
+    font-size: 34px;
+  }
+
+  .public-grid,
+  .feedback-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .public-feedback-strip {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
