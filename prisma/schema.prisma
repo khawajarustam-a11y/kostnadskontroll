@@ -37,6 +37,7 @@ model Company {
   contracts Contract[]
   ledger    LedgerEntry[]
   users     User[]
+  emailConnections EmailConnection[]
 }
 
 model Settings {
@@ -48,6 +49,27 @@ model Settings {
   defaultAlertDays Int      @default(30)
 
   company Company @relation(fields: [companyId], references: [id])
+}
+
+model EmailConnection {
+  id           String   @id @default(cuid())
+  companyId    String
+  userId       String
+  provider     String
+  email        String
+  accessToken  String
+  refreshToken String?
+  scope        String?
+  expiresAt    DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([userId, provider, email])
+  @@index([companyId, provider])
+  @@index([userId])
 }
 
 model Cost {
@@ -132,7 +154,7 @@ model User {
   updatedAt    DateTime @updatedAt
 
   company Company @relation(fields: [companyId], references: [id])
+  emailConnections EmailConnection[]
 
   @@index([companyId])
 }
-

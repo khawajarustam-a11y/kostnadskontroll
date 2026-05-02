@@ -1,11 +1,13 @@
 import { redirect } from "next/navigation";
 import { FilePicker } from "@/components/FilePicker";
 import { SubmitButton } from "@/components/SubmitButton";
+import { getSession } from "@/lib/auth";
 import { getSettingsCached } from "@/lib/cached-data";
 import { DocumentImportError, DocumentImportType, extractFromDocument } from "@/lib/document-import";
 import { setCsvImportReviewDraft, setImportReviewDraft } from "@/lib/import-review";
 import { getTranslations, TranslationKey } from "@/lib/i18n";
 import { withRequestContext, withTiming } from "@/lib/observability";
+import { prisma } from "@/lib/prisma";
 import { requireCompanyId } from "@/lib/session";
 
 export const runtime = "nodejs";
@@ -164,9 +166,23 @@ export default async function Page({
 }) {
   const companyId = await requireCompanyId();
   return withRequestContext({ route: "/import", companyId }, async () => {
-    const settings = await withTiming("import.settings", () => getSettingsCached(companyId));
+    const [settings, session] = await Promise.all([
+      withTiming("import.settings", () => getSettingsCached(companyId)),
+      getSession(),
+    ]);
     const { t } = getTranslations(settings?.language);
     const { status, count, code } = searchParams ? await searchParams : {};
+    const gmailConnection = session
+      ? await prisma.emailConnection.findFirst({
+          where: {
+            companyId,
+            userId: session.userId,
+            provider: "gmail",
+          },
+          orderBy: { updatedAt: "desc" },
+          select: { email: true, updatedAt: true },
+        }).catch(() => null)
+      : null;
     const openAiKey = process.env.OPENAI_API_KEY?.trim() ?? "";
     const detectedOpenAiKeys = Object.keys(process.env)
       .filter((key) => key.toUpperCase().includes("OPENAI") || key.toUpperCase().includes("OPEN_AI"))
@@ -234,6 +250,28 @@ export default async function Page({
         {status === "csv_review_expired" ? (
           <p className="form-error">{t("csvReviewExpired")}</p>
         ) : null}
+        {status === "gmail_missing_config" ? (
+          <p className="form-error">{t("gmailMissingConfig")}</p>
+        ) : null}
+        {status === "gmail_invalid_state" || status === "gmail_connect_failed" ? (
+          <p className="form-error">{t("gmailConnectionFailed")}</p>
+        ) : null}
+        {status === "gmail_connected" ? (
+          <div className="alert-panel alert-panel-safe">
+            <div className="alert-panel-header">
+              <span className="badge badge-safe">{t("notice")}</span>
+              <h2>{t("gmailConnected")}</h2>
+            </div>
+          </div>
+        ) : null}
+        {status === "gmail_disconnected" ? (
+          <div className="alert-panel alert-panel-safe">
+            <div className="alert-panel-header">
+              <span className="badge badge-safe">{t("notice")}</span>
+              <h2>{t("gmailDisconnected")}</h2>
+            </div>
+          </div>
+        ) : null}
 
         <section className="panel import-panel">
           <div className="panel-title">{t("csvImport")}</div>
@@ -254,6 +292,27 @@ export default async function Page({
             </div>
             <SubmitButton className="form-primary" idleLabel={t("previewCsv")} pendingLabel={t("importing")} />
           </form>
+        </section>
+
+        <section className="panel import-panel">
+          <div className="panel-title">{t("connectedInbox")}</div>
+          <p className="muted">{t("connectedInboxText")}</p>
+          {gmailConnection ? (
+            <div className="automation-status automation-status-on">
+              <span className="badge badge-safe">{t("active")}</span>
+              <p>{t("connectedGmail")}: {gmailConnection.email}</p>
+              <p>{t("gmailSearchComingSoon")}</p>
+              <form action="/api/email/gmail/disconnect" method="post">
+                <button className="form-secondary" type="submit">{t("disconnect")}</button>
+              </form>
+            </div>
+          ) : (
+            <div className="automation-status automation-status-off">
+              <span className="badge badge-warning">{t("notConfigured")}</span>
+              <p>{t("gmailNotConnected")}</p>
+              <a className="form-primary inline-action" href="/api/email/gmail/connect">{t("connectGmail")}</a>
+            </div>
+          )}
         </section>
 
         <section className="panel import-panel">
