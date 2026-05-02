@@ -1593,6 +1593,12 @@ button.ghost {
   line-height: 1.5;
 }
 
+.public-feedback-strip p:not(.eyebrow) {
+  margin-top: 8px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
 .public-feedback-strip {
   display: flex;
   align-items: center;
@@ -1605,6 +1611,14 @@ button.ghost {
   display: grid;
   gap: 18px;
   margin-top: 20px;
+}
+
+.feedback-intro {
+  max-width: 720px;
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.5;
 }
 
 .feedback-form-grid {

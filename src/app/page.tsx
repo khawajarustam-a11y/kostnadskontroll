@@ -79,6 +79,7 @@ export default function Home() {
         <div>
           <p className="eyebrow">Beta feedback</p>
           <h2>Trying it? Tell us what feels confusing, useful, or missing.</h2>
+          <p>RenewalGuard is new. Your feedback helps shape what we build next.</p>
         </div>
         <Link className="form-primary" href="/feedback">
           Give feedback

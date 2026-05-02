@@ -92,6 +92,9 @@ export default async function FeedbackPage({ searchParams }: FeedbackPageProps) 
         <p className="page-hero">
           Tell us what would make this useful enough for you to trust it with your renewals.
         </p>
+        <p className="feedback-intro">
+          RenewalGuard is new. Your feedback helps shape what we build next.
+        </p>
       </div>
 
       {status === "sent" ? (
