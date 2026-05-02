@@ -1559,6 +1559,7 @@ button.ghost {
 }
 
 .public-grid > div,
+.public-beta-panel,
 .public-feedback-strip {
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -1597,6 +1598,64 @@ button.ghost {
   margin-top: 8px;
   color: var(--muted);
   line-height: 1.5;
+}
+
+.public-beta-panel {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 18px;
+  align-items: center;
+  margin: 18px 0;
+  padding: 20px;
+}
+
+.public-beta-panel h2 {
+  font-size: 22px;
+}
+
+.public-beta-panel p:not(.eyebrow),
+.public-theme-picker p {
+  margin-top: 8px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.public-theme-picker {
+  display: grid;
+  gap: 12px;
+}
+
+.public-theme-picker p {
+  margin: 0;
+  font-weight: 800;
+}
+
+.public-theme-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(248, 250, 252, 0.8);
+}
+
+.public-theme-option {
+  min-height: 42px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.public-theme-option:hover,
+.public-theme-option-active {
+  border-color: rgba(255, 107, 53, 0.38);
+  background: rgba(255, 107, 53, 0.1);
+  color: var(--ink);
 }
 
 .public-feedback-strip {
@@ -1683,6 +1742,7 @@ button.ghost {
   }
 
   .public-grid,
+  .public-beta-panel,
   .public-problem,
   .public-trust,
   .feedback-form-grid {

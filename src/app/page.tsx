@@ -1,4 +1,5 @@
 import Link from "next/link";
+import PublicThemePicker from "@/components/PublicThemePicker";
 
 export default function Home() {
   return (
@@ -10,6 +11,7 @@ export default function Home() {
         <nav className="public-nav" aria-label="Public navigation">
           <Link href="#how-it-works">How it works</Link>
           <Link href="#trust">Trust</Link>
+          <Link href="#pricing">Pricing</Link>
           <Link href="/feedback">Feedback</Link>
           <Link className="public-login" href="/login">
             Log in
@@ -73,6 +75,18 @@ export default function Home() {
           <p>You can edit extracted details before saving.</p>
           <p>Connected inbox scanning is optional and will stay under your control.</p>
         </div>
+      </section>
+
+      <section id="pricing" className="public-beta-panel" aria-label="Early access and pricing">
+        <div>
+          <p className="eyebrow">Early access</p>
+          <h2>Try RenewalGuard now. Pricing comes later.</h2>
+          <p>
+            We are focused on learning from early users first. Pricing will be introduced after
+            the beta period, with clear plans before anything changes.
+          </p>
+        </div>
+        <PublicThemePicker />
       </section>
 
       <section className="public-feedback-strip">
