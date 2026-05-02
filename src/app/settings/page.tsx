@@ -104,7 +104,6 @@ export default async function Page() {
           <span className={reminderConfigured ? "badge badge-safe" : "badge badge-warning"}>
             {reminderConfigured ? t("active") : t("notConfigured")}
           </span>
-          <strong>{t("dailyReminderSchedule")}</strong>
           {reminderNeeds.length > 0 ? <p>{t("missingVariables")}: {reminderNeeds.join(", ")}</p> : <p>{t("readyToSendReminders")}</p>}
         </div>
       </section>
