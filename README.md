@@ -37,7 +37,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ## Automation
 
-Contract reminders run through Vercel Cron at `/api/reminders/daily`. The cron checks every hour, then sends reminders only when it is around 09:00 in each company's configured timezone.
+Contract reminders run through Vercel Cron at `/api/reminders/daily`. On Vercel Hobby, the cron runs once per day.
 
 Required environment variables:
 
