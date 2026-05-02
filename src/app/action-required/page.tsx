@@ -126,12 +126,15 @@ export default async function Page() {
           <section className="alert-panel alert-panel-safe">
             <div className="alert-panel-header">
               <span className="badge badge-safe">{t("notice")}</span>
-              <h2>{t("allClearTitle")}</h2>
+              <h2>{t("emptyActionTitle")}</h2>
             </div>
-            <p className="muted">{t("allClearText")}</p>
+            <p className="muted">{t("emptyActionText")}</p>
             <div className="alert-panel-row">
-              <Link className="form-primary" href="/contracts">
-                {t("reviewContracts")}
+              <Link className="form-primary" href="/import">
+                {t("importFirstContract")}
+              </Link>
+              <Link className="form-secondary" href="/contracts/new">
+                {t("addContractManually")}
               </Link>
             </div>
           </section>

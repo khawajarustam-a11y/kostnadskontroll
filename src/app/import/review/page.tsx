@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { Currency } from "@prisma/client";
 import { SubmitButton } from "@/components/SubmitButton";
 import { getSettingsCached } from "@/lib/cached-data";
+import { formatCurrency } from "@/lib/currency";
 import { dateInputValue, clearImportReviewDraft, getImportReviewDraft, saveReviewedImport } from "@/lib/import-review";
 import { getTranslations } from "@/lib/i18n";
 import { withRequestContext, withTiming } from "@/lib/observability";
@@ -52,11 +53,17 @@ export default async function Page({
     const draft = await getImportReviewDraft();
     if (!draft) redirect("/import?status=review_expired");
     const settings = await withTiming("import-review.settings", () => getSettingsCached(companyId));
-    const { t } = getTranslations(settings?.language);
+    const { t, language } = getTranslations(settings?.language);
     const { status } = searchParams ? await searchParams : {};
     const data = draft.data;
     const amount = data.amount ?? data.pricePerMonth ?? "";
     const currency = data.currency ?? settings?.displayCurrency ?? "USD";
+    const locale = language === "NO" ? "nb-NO" : "en-US";
+    const amountNumber = Number(amount);
+    const readableAmount = Number.isFinite(amountNumber)
+      ? formatCurrency(amountNumber, currency as Currency, locale)
+      : "-";
+    const nextDate = data.renewalDate ?? data.endDate ?? data.startDate;
 
     return (
       <div className="page">
@@ -72,6 +79,32 @@ export default async function Page({
         <section className="panel import-panel">
           <div className="panel-title">{t("extractedDetails")}</div>
           <p className="muted">{t("sourceFile")}: {draft.sourceName}</p>
+          <div className="review-wow-panel">
+            <div>
+              <span className="badge badge-safe">{t("aiFoundSummary")}</span>
+              <h2>{data.name ?? t("unknownSupplier")}</h2>
+            </div>
+            <div className="review-wow-grid">
+              <div>
+                <div className="card-label">{t("supplier")}</div>
+                <strong>{data.supplier ?? t("unknownSupplier")}</strong>
+              </div>
+              <div>
+                <div className="card-label">{t("possibleNextCharge")}</div>
+                <strong>{readableAmount}</strong>
+              </div>
+              <div>
+                <div className="card-label">{t("renewalDate")}</div>
+                <strong>{nextDate ? dateInputValue(nextDate) : "-"}</strong>
+              </div>
+              {draft.type === "contracts" ? (
+                <div>
+                  <div className="card-label">{t("cancelByDate")}</div>
+                  <strong>{data.cancelByDate ? dateInputValue(data.cancelByDate) : "-"}</strong>
+                </div>
+              ) : null}
+            </div>
+          </div>
           <form action={saveImportReview} className="stack">
             <div className="form-grid form-grid-3">
               <label className="field-label">

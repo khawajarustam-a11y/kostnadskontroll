@@ -297,6 +297,7 @@ export default async function Page({
         <section className="panel import-panel">
           <div className="panel-title">{t("connectedInbox")}</div>
           <p className="muted">{t("connectedInboxText")}</p>
+          <p className="muted trust-copy">{t("gmailTrustText")}</p>
           {gmailConnection ? (
             <div className="automation-status automation-status-on">
               <span className="badge badge-safe">{t("active")}</span>

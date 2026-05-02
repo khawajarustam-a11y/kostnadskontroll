@@ -130,6 +130,7 @@ export default async function Page() {
     const netTotal = incomeTotal - expenseTotal;
     const hasRisk = riskItems.length > 0;
     const riskDays = defaultAlertDays;
+    const hasProtectedData = contracts.length > 0 || costs.length > 0;
 
     return (
       <div className="page dashboard-page">
@@ -137,6 +138,38 @@ export default async function Page() {
         <h1 className="page-title">{t("dashboard")}</h1>
         <p className="page-hero">{t("dashboardHero")}</p>
         <p className="muted">{t("dashboardSubtitle")}</p>
+
+        {!hasProtectedData ? (
+          <section className="onboarding-panel">
+            <div>
+              <span className="badge badge-warning">{t("startHere")}</span>
+              <h2>{t("onboardingTitle")}</h2>
+              <p className="muted">{t("onboardingText")}</p>
+            </div>
+            <div className="onboarding-steps">
+              <div>
+                <strong>1</strong>
+                <span>{t("onboardingStepImport")}</span>
+              </div>
+              <div>
+                <strong>2</strong>
+                <span>{t("onboardingStepReview")}</span>
+              </div>
+              <div>
+                <strong>3</strong>
+                <span>{t("onboardingStepProtect")}</span>
+              </div>
+            </div>
+            <div className="page-actions">
+              <Link className="form-primary" href="/import">
+                {t("importFirstContract")}
+              </Link>
+              <Link className="form-secondary" href="/contracts/new">
+                {t("addContractManually")}
+              </Link>
+            </div>
+          </section>
+        ) : null}
 
         <section className={"alert-panel " + (hasRisk ? "alert-panel-danger" : "alert-panel-safe")}>
           <div className="alert-panel-header">
