@@ -92,7 +92,7 @@ function buildReminderEmail(company: ReminderCompany, items: ReminderItem[]) {
       <p>These contracts may renew, expire, or pass a cancellation deadline soon.</p>
       <ul>${rows}</ul>
       ${actionUrl ? `<p><a href="${actionUrl}" style="display:inline-block;background:#ff6433;color:white;text-decoration:none;padding:12px 18px;border-radius:8px;font-weight:700">Review action items</a></p>` : ""}
-      <p>Open Kostnadskontroll and review the Action Required page before the deadline.</p>
+      <p>Open RenewalGuard and review the Action Required page before the deadline.</p>
     </div>
   `;
 
@@ -105,7 +105,7 @@ function buildReminderEmail(company: ReminderCompany, items: ReminderItem[]) {
       return `${item.contract.name}${supplier} - ${riskLabel(item.kind)} ${formatDate(item.dueDate)} (${days}). Possible charge: ${formatMoney(item.contract)}.`;
     }),
     "",
-    actionUrl ? `Open action items: ${actionUrl}` : "Open Kostnadskontroll and review the Action Required page before the deadline.",
+    actionUrl ? `Open action items: ${actionUrl}` : "Open RenewalGuard and review the Action Required page before the deadline.",
   ].join("\n");
 
   return { subject, html, text };

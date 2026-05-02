@@ -16,7 +16,7 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Kostnadskontroll",
+  title: "RenewalGuard",
   description: "Never miss a renewal or cancellation deadline.",
 };
 
@@ -33,7 +33,7 @@ export default async function RootLayout({
       <body className={`${spaceGrotesk.variable} ${plexMono.variable}`}>
         <div className="app-shell">
           <aside className="app-nav">
-            <div className="brand">Kostnadskontroll</div>
+            <div className="brand">RenewalGuard</div>
             <AppNav hasSession={Boolean(session)} authRequired={authRequired} />
           </aside>
           <main className="app-main">{children}</main>
@@ -42,4 +42,3 @@ export default async function RootLayout({
     </html>
   );
 }
-
