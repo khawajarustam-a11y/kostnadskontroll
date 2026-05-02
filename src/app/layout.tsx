@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
-import { AppNav } from "@/components/AppNav";
+import { AppShell } from "@/components/AppShell";
 import { getSession, isAuthRequired } from "@/lib/auth";
 
 const spaceGrotesk = Space_Grotesk({
@@ -31,13 +31,9 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={`${spaceGrotesk.variable} ${plexMono.variable}`}>
-        <div className="app-shell">
-          <aside className="app-nav">
-            <div className="brand">RenewalGuard</div>
-            <AppNav hasSession={Boolean(session)} authRequired={authRequired} />
-          </aside>
-          <main className="app-main">{children}</main>
-        </div>
+        <AppShell hasSession={Boolean(session)} authRequired={authRequired}>
+          {children}
+        </AppShell>
       </body>
     </html>
   );

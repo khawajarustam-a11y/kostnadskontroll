@@ -179,6 +179,11 @@ a {
   padding: 40px 44px 56px;
 }
 
+.public-main {
+  min-height: 100vh;
+  padding: 28px 44px 56px;
+}
+
 .page {
   max-width: 1100px;
 }
@@ -1440,6 +1445,45 @@ button.ghost {
 
 .public-page {
   max-width: 1080px;
+  margin: 0 auto;
+}
+
+.public-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.public-brand {
+  color: var(--ink);
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.public-nav {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.public-nav a {
+  border-radius: 999px;
+  padding: 8px 10px;
+}
+
+.public-nav a:hover {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.public-nav .public-login {
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.74);
 }
 
 .public-hero {
@@ -1473,6 +1517,45 @@ button.ghost {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
   margin: 18px 0;
+}
+
+.public-problem,
+.public-trust {
+  display: grid;
+  grid-template-columns: 0.95fr 1.05fr;
+  gap: 22px;
+  align-items: center;
+  margin: 18px 0;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: var(--shadow);
+}
+
+.public-problem h2,
+.public-trust h2 {
+  font-size: 26px;
+  line-height: 1.18;
+}
+
+.public-problem p,
+.public-trust-list p {
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.55;
+}
+
+.public-trust-list {
+  display: grid;
+  gap: 10px;
+}
+
+.public-trust-list p {
+  padding: 12px 14px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 12px;
+  background: rgba(248, 250, 252, 0.78);
 }
 
 .public-grid > div,
@@ -1567,11 +1650,27 @@ button.ghost {
 }
 
 @media (max-width: 920px) {
+  .public-main {
+    padding: 18px 16px 36px;
+  }
+
+  .public-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .public-nav {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
   .public-hero h1 {
     font-size: 34px;
   }
 
   .public-grid,
+  .public-problem,
+  .public-trust,
   .feedback-form-grid {
     grid-template-columns: 1fr;
   }
