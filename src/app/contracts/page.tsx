@@ -1,14 +1,11 @@
 import ConfirmDeleteForm from "@/components/ConfirmDeleteForm";
-import ContractQuickForm from "@/components/ContractQuickForm";
 import { getTranslations } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 import { requireCompanyId } from "@/lib/session";
 import { ContractStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { withRequestContext, withTiming } from "@/lib/observability";
-import { clampAlertDays, parseCurrency, parseOptionalDate, parsePositiveAmount } from "@/lib/validation";
 import { getSettingsCached } from "@/lib/cached-data";
 import { formatCurrency } from "@/lib/currency";
 
@@ -44,56 +41,6 @@ function getComputedStatus(
     return "EXPIRING";
   }
   return "ACTIVE";
-}
-
-async function createContract(formData: FormData) {
-  "use server";
-  const companyId = await requireCompanyId();
-  const name = String(formData.get("name") ?? "").trim();
-  const supplier = String(formData.get("supplier") ?? "").trim();
-  const startDateValue = String(formData.get("startDate") ?? "").trim();
-  const endDateValue = String(formData.get("endDate") ?? "").trim();
-  const renewalDateValue = String(formData.get("renewalDate") ?? "").trim();
-  const cancelByDateValue = String(formData.get("cancelByDate") ?? "").trim();
-  const pricePerMonth = parsePositiveAmount(formData.get("pricePerMonth"));
-  const currency = parseCurrency(formData.get("currency"));
-  const alertDays = clampAlertDays(formData.get("alertDays"), 30);
-  const notes = String(formData.get("notes") ?? "").trim();
-
-  if (!name) {
-    redirect("/contracts?error=invalid_contract");
-  }
-
-  const startDate = parseOptionalDate(startDateValue);
-  const endDate = parseOptionalDate(endDateValue);
-  const renewalDate = parseOptionalDate(renewalDateValue);
-  const cancelByDate = parseOptionalDate(cancelByDateValue);
-
-  if (startDate === "invalid" || endDate === "invalid" || renewalDate === "invalid" || cancelByDate === "invalid") {
-    redirect("/contracts?error=invalid_contract");
-  }
-  if (startDate && endDate && endDate < startDate) redirect("/contracts?error=invalid_date_range");
-  const computedStatus = getComputedStatus(endDate, cancelByDate, new Date());
-
-  await prisma.contract.create({
-    data: {
-      companyId,
-      name,
-      supplier: supplier || null,
-      status: computedStatus,
-      startDate,
-      endDate,
-      renewalDate,
-      cancelByDate,
-      pricePerMonth,
-      currency,
-      alertDays,
-      notes: notes || null,
-    },
-  });
-
-  revalidatePath("/contracts");
-  revalidatePath("/dashboard");
 }
 
 async function deleteContract(formData: FormData) {
@@ -146,7 +93,6 @@ export default async function Page({
   );
   const { t, language } = getTranslations(settings?.language);
   const locale = language === "NO" ? "nb-NO" : "en-US";
-  const displayCurrency = settings?.displayCurrency ?? "USD";
   const defaultAlertDays = settings?.defaultAlertDays ?? 30;
   const { error, view } = searchParams ? await searchParams : {};
   const showDeleted = view === "deleted";
@@ -156,7 +102,6 @@ export default async function Page({
       : error === "invalid_contract"
         ? t("errorInvalidContract")
         : null;
-  const addContractLabel = t("addContract") || (language === "NO" ? "Legg til kontrakt" : "Add contract");
   const confirmDelete = t("confirmDelete");
   const confirmDeleteForever = t("confirmDeleteForever");
 
@@ -228,6 +173,14 @@ export default async function Page({
       <div className="page-header">
         <h1 className="page-title">{t("contracts")}</h1>
         <p className="muted">{t("contractsSubtitle")}</p>
+        <div className="page-actions">
+          <Link className="form-primary" href="/contracts/new">
+            {t("addContract")}
+          </Link>
+          <Link className="form-secondary" href="/import">
+            {t("importData")}
+          </Link>
+        </div>
       </div>
 
       <div className="kpi-row">
@@ -246,35 +199,6 @@ export default async function Page({
       </div>
 
       {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
-
-      <ContractQuickForm
-        action={createContract}
-        defaultCurrency={displayCurrency}
-        defaultAlertDays={defaultAlertDays}
-        labels={{
-          title: t("quickAddContract"),
-          subtitle: t("quickAddSubtitle"),
-          template: t("contractTemplate"),
-          monthly: t("templateMonthlySaaS"),
-          annual: t("templateAnnualSaaS"),
-          domain: t("templateDomainHosting"),
-          insurance: t("templateInsurance"),
-          custom: t("templateCustom"),
-          name: t("name"),
-          supplier: t("supplier"),
-          pricePerMonth: t("pricePerMonth"),
-          currency: t("currency"),
-          startDate: t("startDate"),
-          endDate: t("endDate"),
-          renewalDate: t("renewalDate"),
-          cancelByDate: t("cancelByDate"),
-          contractDates: t("contractDates"),
-          alertDays: t("alertDays"),
-          notes: t("notes"),
-          submit: addContractLabel || t("addContract"),
-          quickTip: t("quickAddTip"),
-        }}
-      />
 
       <div className="view-switch">
         <Link className={`view-switch-item ${!showDeleted ? "active" : ""}`} href="/contracts">

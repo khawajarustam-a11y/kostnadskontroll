@@ -572,6 +572,13 @@ button.ghost {
   margin-bottom: 18px;
 }
 
+.page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
 .panel {
   background: var(--card);
   border: 1px solid var(--border);
