@@ -406,7 +406,6 @@ export default async function Page({
               <th>{t("frequency")}</th>
               <th>{t("nextCharge")}</th>
               <th className="num">{t("shownIn")} ({baseCurrency})</th>
-              <th>{t("createdAt")}</th>
               <th>{t("actions")}</th>
             </tr>
           </thead>
@@ -415,7 +414,14 @@ export default async function Page({
 
               return (
                 <tr key={cost.id}>
-                  <td>{cost.supplier ?? "-"}</td>
+                  <td>
+                    <div className="stack" style={{ gap: 4 }}>
+                      <span>{cost.supplier ?? "-"}</span>
+                      <span className="muted" style={{ fontSize: 12 }}>
+                        {t("createdAt")}: {new Intl.DateTimeFormat(locale).format(cost.createdAt)}
+                      </span>
+                    </div>
+                  </td>
                   <td className="num">
                     {Number.isFinite(amount)
                       ? formatCurrency(amount, cost.currency, locale)
@@ -444,7 +450,6 @@ export default async function Page({
                       ? formatCurrency(amountInBase, baseCurrency, locale)
                       : "-"}
                   </td>
-                  <td>{new Intl.DateTimeFormat(locale).format(cost.createdAt)}</td>
                   <td>
                     <div className="actions-row">
                       <Link className="ghost icon-action edit-action" href={`/costs/${cost.id}/edit`} title={t("edit")} aria-label={t("edit")}>
@@ -476,21 +481,26 @@ export default async function Page({
                 <th className="num">{t("amount")}</th>
                 <th>{t("currency")}</th>
                 <th>{t("frequency")}</th>
-                <th>{t("createdAt")}</th>
                 <th>{t("actions")}</th>
               </tr>
             </thead>
             <tbody>
               {deletedCosts.map((cost) => (
                 <tr key={cost.id}>
-                  <td>{cost.supplier ?? "-"}</td>
+                  <td>
+                    <div className="stack" style={{ gap: 4 }}>
+                      <span>{cost.supplier ?? "-"}</span>
+                      <span className="muted" style={{ fontSize: 12 }}>
+                        {t("createdAt")}: {new Intl.DateTimeFormat(locale).format(cost.createdAt)}
+                      </span>
+                    </div>
+                  </td>
                   <td>{cost.category ?? "-"}</td>
                   <td className="num">
                     {formatCurrency(Number(cost.amount), cost.currency, locale)}
                   </td>
                   <td>{cost.currency}</td>
                   <td>{cost.frequency}</td>
-                  <td>{new Intl.DateTimeFormat(locale).format(cost.createdAt)}</td>
                   <td>
                     <div className="actions-row">
                       <form action={restoreCost}>

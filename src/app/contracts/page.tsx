@@ -297,11 +297,7 @@ export default async function Page({
                   <th>{t("supplier")}</th>
                   <th className="num">{t("amount")}</th>
                   <th>{t("status")}</th>
-                  <th>{t("startDate")}</th>
-                  <th>{t("endDate")}</th>
-                  <th>{t("renewalDate")}</th>
-                  <th>{t("cancelByDate")}</th>
-                  <th>{t("createdAt")}</th>
+                  <th>{t("importantDates")}</th>
                   <th>{t("actions")}</th>
                 </tr>
               </thead>
@@ -337,7 +333,14 @@ export default async function Page({
                           : undefined
                       }
                     >
-                      <td className="table-primary">{contract.name}</td>
+                      <td className="table-primary">
+                        <div className="stack" style={{ gap: 4 }}>
+                          <span>{contract.name}</span>
+                          <span className="muted" style={{ fontSize: 12 }}>
+                            {t("createdAt")}: {new Intl.DateTimeFormat(locale).format(contract.createdAt)}
+                          </span>
+                        </div>
+                      </td>
                       <td className="muted">{contract.supplier ?? "-"}</td>
                       <td className="num">
                         {contract.pricePerMonth && contract.currency
@@ -349,12 +352,14 @@ export default async function Page({
                           {computedStatus}
                         </span>
                       </td>
-                      <td>{contract.startDate ? new Intl.DateTimeFormat(locale).format(contract.startDate) : "-"}</td>
-                      <td className="table-primary">
-                        {contract.endDate ? (
-                          <div className="stack" style={{ gap: 4 }}>
-                            <span>{new Intl.DateTimeFormat(locale).format(contract.endDate)}</span>
-                            {contract.endDate < now ? (
+                      <td>
+                        <div className="stack" style={{ gap: 6 }}>
+                          <span>
+                            <span className="muted">{t("endDate")}:</span>{" "}
+                            {contract.endDate ? new Intl.DateTimeFormat(locale).format(contract.endDate) : "-"}
+                          </span>
+                          {contract.endDate ? (
+                            contract.endDate < now ? (
                               <span className="muted" style={{ fontSize: 12 }}>
                                 {language === "NO"
                                   ? `Utløpt for ${daysSince(contract.endDate, now)} dager siden`
@@ -366,34 +371,35 @@ export default async function Page({
                               <span className="muted" style={{ fontSize: 12 }}>
                                 {t("expiresIn")} {endInDays} {t("days")}
                               </span>
-                            ) : null}
-                          </div>
-                        ) : (
-                          "-"
-                        )}
+                            ) : null
+                          ) : null}
+                          <span>
+                            <span className="muted">{t("renewalDate")}:</span>{" "}
+                            {contract.renewalDate ? new Intl.DateTimeFormat(locale).format(contract.renewalDate) : "-"}
+                          </span>
+                          <span>
+                            <span className="muted">{t("cancelByDate")}:</span>{" "}
+                            {contract.cancelByDate ? (
+                              contract.cancelByDate < now && computedStatus !== "TERMINATED" ? (
+                                <span className="badge badge-warning">{t("cancellationWindowPassed")}</span>
+                              ) : cancelUrgent && cancelInDays !== null ? (
+                                <span className="badge badge-warning">
+                                  {"\u26A0"} {language === "NO" ? "Handling kreves" : "Action required"}:{" "}
+                                  {t("cancelWithin")} {cancelInDays} {t("days")}
+                                </span>
+                              ) : cancelSoon && cancelInDays !== null ? (
+                                <span className="badge badge-danger">
+                                  {t("cancelWithin")} {cancelInDays} {t("days")}
+                                </span>
+                              ) : (
+                                new Intl.DateTimeFormat(locale).format(contract.cancelByDate)
+                              )
+                            ) : (
+                              "-"
+                            )}
+                          </span>
+                        </div>
                       </td>
-                      <td>{contract.renewalDate ? new Intl.DateTimeFormat(locale).format(contract.renewalDate) : "-"}</td>
-                      <td>
-                        {contract.cancelByDate ? (
-                          contract.cancelByDate < now && computedStatus !== "TERMINATED" ? (
-                            <span className="badge badge-warning">{t("cancellationWindowPassed")}</span>
-                          ) : cancelUrgent && cancelInDays !== null ? (
-                            <span className="badge badge-warning">
-                              {"\u26A0"} {language === "NO" ? "Handling kreves" : "Action required"}:{" "}
-                              {t("cancelWithin")} {cancelInDays} {t("days")}
-                            </span>
-                          ) : cancelSoon && cancelInDays !== null ? (
-                            <span className="badge badge-danger">
-                              {t("cancelWithin")} {cancelInDays} {t("days")}
-                            </span>
-                          ) : (
-                            new Intl.DateTimeFormat(locale).format(contract.cancelByDate)
-                          )
-                        ) : (
-                          "-"
-                        )}
-                      </td>
-                      <td>{new Intl.DateTimeFormat(locale).format(contract.createdAt)}</td>
                       <td>
                         <div className="actions-row">
                           <Link
@@ -429,17 +435,21 @@ export default async function Page({
                 <th>{t("supplier")}</th>
                 <th className="num">{t("amount")}</th>
                 <th>{t("status")}</th>
-                <th>{t("endDate")}</th>
-                <th>{t("renewalDate")}</th>
-                <th>{t("cancelByDate")}</th>
-                <th>{t("createdAt")}</th>
+                <th>{t("importantDates")}</th>
                 <th>{t("actions")}</th>
               </tr>
             </thead>
             <tbody>
               {deletedContracts.map((contract) => (
                 <tr key={contract.id}>
-                  <td className="table-primary">{contract.name}</td>
+                  <td className="table-primary">
+                    <div className="stack" style={{ gap: 4 }}>
+                      <span>{contract.name}</span>
+                      <span className="muted" style={{ fontSize: 12 }}>
+                        {t("createdAt")}: {new Intl.DateTimeFormat(locale).format(contract.createdAt)}
+                      </span>
+                    </div>
+                  </td>
                   <td className="muted">{contract.supplier ?? "-"}</td>
                   <td className="num">
                     {contract.pricePerMonth && contract.currency
@@ -449,10 +459,22 @@ export default async function Page({
                   <td>
                     <span className={`status-pill ${getStatusClass(contract.status)}`}>{contract.status}</span>
                   </td>
-                  <td>{contract.endDate ? new Intl.DateTimeFormat(locale).format(contract.endDate) : "-"}</td>
-                  <td>{contract.renewalDate ? new Intl.DateTimeFormat(locale).format(contract.renewalDate) : "-"}</td>
-                  <td>{contract.cancelByDate ? new Intl.DateTimeFormat(locale).format(contract.cancelByDate) : "-"}</td>
-                  <td>{new Intl.DateTimeFormat(locale).format(contract.createdAt)}</td>
+                  <td>
+                    <div className="stack" style={{ gap: 6 }}>
+                      <span>
+                        <span className="muted">{t("endDate")}:</span>{" "}
+                        {contract.endDate ? new Intl.DateTimeFormat(locale).format(contract.endDate) : "-"}
+                      </span>
+                      <span>
+                        <span className="muted">{t("renewalDate")}:</span>{" "}
+                        {contract.renewalDate ? new Intl.DateTimeFormat(locale).format(contract.renewalDate) : "-"}
+                      </span>
+                      <span>
+                        <span className="muted">{t("cancelByDate")}:</span>{" "}
+                        {contract.cancelByDate ? new Intl.DateTimeFormat(locale).format(contract.cancelByDate) : "-"}
+                      </span>
+                    </div>
+                  </td>
                   <td>
                     <div className="actions-row">
                       <form action={restoreContract}>

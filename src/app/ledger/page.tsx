@@ -235,7 +235,6 @@ export default async function Page({
               <th>{t("description")}</th>
               <th className="num">{t("amount")}</th>
               <th>{t("currency")}</th>
-              <th>{t("createdAt")}</th>
               <th>{t("actions")}</th>
             </tr>
           </thead>
@@ -243,7 +242,12 @@ export default async function Page({
             {entries.map((entry) => (
               <tr key={entry.id}>
                 <td>
-                  {new Intl.DateTimeFormat(locale).format(entry.entryDate)}
+                  <div className="stack" style={{ gap: 4 }}>
+                    <span>{new Intl.DateTimeFormat(locale).format(entry.entryDate)}</span>
+                    <span className="muted" style={{ fontSize: 12 }}>
+                      {t("createdAt")}: {new Intl.DateTimeFormat(locale).format(entry.createdAt)}
+                    </span>
+                  </div>
                 </td>
                 <td>
                   <span
@@ -260,7 +264,6 @@ export default async function Page({
                   {formatCurrency(Number(entry.amount), entry.currency, locale)}
                 </td>
                 <td>{entry.currency}</td>
-                <td>{new Intl.DateTimeFormat(locale).format(entry.createdAt)}</td>
                 <td>
                   <div className="actions-row">
                     <Link
@@ -301,7 +304,6 @@ export default async function Page({
                 <th>{t("description")}</th>
                 <th className="num">{t("amount")}</th>
                 <th>{t("currency")}</th>
-                <th>{t("createdAt")}</th>
                 <th>{t("actions")}</th>
               </tr>
             </thead>
@@ -309,7 +311,12 @@ export default async function Page({
               {deletedEntries.map((entry) => (
                 <tr key={entry.id}>
                   <td>
-                    {new Intl.DateTimeFormat(locale).format(entry.entryDate)}
+                    <div className="stack" style={{ gap: 4 }}>
+                      <span>{new Intl.DateTimeFormat(locale).format(entry.entryDate)}</span>
+                      <span className="muted" style={{ fontSize: 12 }}>
+                        {t("createdAt")}: {new Intl.DateTimeFormat(locale).format(entry.createdAt)}
+                      </span>
+                    </div>
                   </td>
                   <td>
                     <span
@@ -326,7 +333,6 @@ export default async function Page({
                     {formatCurrency(Number(entry.amount), entry.currency, locale)}
                   </td>
                   <td>{entry.currency}</td>
-                  <td>{new Intl.DateTimeFormat(locale).format(entry.createdAt)}</td>
                   <td>
                     <div className="actions-row">
                       <form action={restoreEntry}>
