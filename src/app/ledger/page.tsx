@@ -117,6 +117,7 @@ export default async function Page({
           description: true,
           amount: true,
           currency: true,
+          createdAt: true,
         },
       }),
       prisma.ledgerEntry.findMany({
@@ -130,6 +131,7 @@ export default async function Page({
           description: true,
           amount: true,
           currency: true,
+          createdAt: true,
         },
       }),
     ])
@@ -233,6 +235,7 @@ export default async function Page({
               <th>{t("description")}</th>
               <th className="num">{t("amount")}</th>
               <th>{t("currency")}</th>
+              <th>{t("createdAt")}</th>
               <th>{t("actions")}</th>
             </tr>
           </thead>
@@ -257,6 +260,7 @@ export default async function Page({
                   {formatCurrency(Number(entry.amount), entry.currency, locale)}
                 </td>
                 <td>{entry.currency}</td>
+                <td>{new Intl.DateTimeFormat(locale).format(entry.createdAt)}</td>
                 <td>
                   <div className="actions-row">
                     <Link
@@ -297,6 +301,7 @@ export default async function Page({
                 <th>{t("description")}</th>
                 <th className="num">{t("amount")}</th>
                 <th>{t("currency")}</th>
+                <th>{t("createdAt")}</th>
                 <th>{t("actions")}</th>
               </tr>
             </thead>
@@ -321,6 +326,7 @@ export default async function Page({
                     {formatCurrency(Number(entry.amount), entry.currency, locale)}
                   </td>
                   <td>{entry.currency}</td>
+                  <td>{new Intl.DateTimeFormat(locale).format(entry.createdAt)}</td>
                   <td>
                     <div className="actions-row">
                       <form action={restoreEntry}>

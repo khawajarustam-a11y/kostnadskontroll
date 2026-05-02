@@ -10,6 +10,7 @@ import { redirect } from "next/navigation";
 import { withRequestContext, withTiming } from "@/lib/observability";
 import { clampAlertDays, parseCurrency, parseOptionalDate, parsePositiveAmount } from "@/lib/validation";
 import { getSettingsCached } from "@/lib/cached-data";
+import { formatCurrency } from "@/lib/currency";
 
 export const runtime = "nodejs";
 
@@ -173,6 +174,9 @@ export default async function Page({
           endDate: true,
           renewalDate: true,
           cancelByDate: true,
+          pricePerMonth: true,
+          currency: true,
+          createdAt: true,
         },
       }),
       prisma.contract.findMany({
@@ -186,6 +190,9 @@ export default async function Page({
           endDate: true,
           renewalDate: true,
           cancelByDate: true,
+          pricePerMonth: true,
+          currency: true,
+          createdAt: true,
         },
       }),
     ])
@@ -288,11 +295,13 @@ export default async function Page({
                 <tr>
                   <th>{t("name")}</th>
                   <th>{t("supplier")}</th>
+                  <th className="num">{t("amount")}</th>
                   <th>{t("status")}</th>
                   <th>{t("startDate")}</th>
                   <th>{t("endDate")}</th>
                   <th>{t("renewalDate")}</th>
                   <th>{t("cancelByDate")}</th>
+                  <th>{t("createdAt")}</th>
                   <th>{t("actions")}</th>
                 </tr>
               </thead>
@@ -330,6 +339,11 @@ export default async function Page({
                     >
                       <td className="table-primary">{contract.name}</td>
                       <td className="muted">{contract.supplier ?? "-"}</td>
+                      <td className="num">
+                        {contract.pricePerMonth && contract.currency
+                          ? formatCurrency(Number(contract.pricePerMonth), contract.currency, locale)
+                          : "-"}
+                      </td>
                       <td>
                         <span className={`status-pill ${getStatusClass(computedStatus)}`}>
                           {computedStatus}
@@ -379,6 +393,7 @@ export default async function Page({
                           "-"
                         )}
                       </td>
+                      <td>{new Intl.DateTimeFormat(locale).format(contract.createdAt)}</td>
                       <td>
                         <div className="actions-row">
                           <Link
@@ -412,10 +427,12 @@ export default async function Page({
               <tr>
                 <th>{t("name")}</th>
                 <th>{t("supplier")}</th>
+                <th className="num">{t("amount")}</th>
                 <th>{t("status")}</th>
                 <th>{t("endDate")}</th>
                 <th>{t("renewalDate")}</th>
                 <th>{t("cancelByDate")}</th>
+                <th>{t("createdAt")}</th>
                 <th>{t("actions")}</th>
               </tr>
             </thead>
@@ -424,12 +441,18 @@ export default async function Page({
                 <tr key={contract.id}>
                   <td className="table-primary">{contract.name}</td>
                   <td className="muted">{contract.supplier ?? "-"}</td>
+                  <td className="num">
+                    {contract.pricePerMonth && contract.currency
+                      ? formatCurrency(Number(contract.pricePerMonth), contract.currency, locale)
+                      : "-"}
+                  </td>
                   <td>
                     <span className={`status-pill ${getStatusClass(contract.status)}`}>{contract.status}</span>
                   </td>
                   <td>{contract.endDate ? new Intl.DateTimeFormat(locale).format(contract.endDate) : "-"}</td>
                   <td>{contract.renewalDate ? new Intl.DateTimeFormat(locale).format(contract.renewalDate) : "-"}</td>
                   <td>{contract.cancelByDate ? new Intl.DateTimeFormat(locale).format(contract.cancelByDate) : "-"}</td>
+                  <td>{new Intl.DateTimeFormat(locale).format(contract.createdAt)}</td>
                   <td>
                     <div className="actions-row">
                       <form action={restoreContract}>
