@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { FilePicker } from "@/components/FilePicker";
 import { SubmitButton } from "@/components/SubmitButton";
+import { consumeAiImportAllowance, getAiImportUsage } from "@/lib/ai-import-limit";
 import { getSession } from "@/lib/auth";
 import { getSettingsCached } from "@/lib/cached-data";
 import { DocumentImportError, DocumentImportType, extractFromDocument } from "@/lib/document-import";
@@ -90,7 +91,7 @@ async function importCsv(formData: FormData) {
 
 async function importDocument(formData: FormData) {
   "use server";
-  await requireCompanyId();
+  const companyId = await requireCompanyId();
   const importType = String(formData.get("documentImportType") ?? "contracts") as DocumentImportType;
   const file = formData.get("document");
   if (!(file instanceof File) || file.size === 0) {
@@ -98,6 +99,10 @@ async function importDocument(formData: FormData) {
   }
   if (!process.env.OPENAI_API_KEY) {
     redirect("/import?status=missing_ai");
+  }
+  const allowance = await consumeAiImportAllowance(companyId);
+  if (!allowance.allowed) {
+    redirect("/import?status=ai_limit");
   }
 
   let extracted;
@@ -125,7 +130,7 @@ async function importDocument(formData: FormData) {
 
 async function importEmailText(formData: FormData) {
   "use server";
-  await requireCompanyId();
+  const companyId = await requireCompanyId();
   const importType = String(formData.get("emailImportType") ?? "contracts") as DocumentImportType;
   const emailText = String(formData.get("emailText") ?? "").trim();
   if (emailText.length < 20) {
@@ -133,6 +138,10 @@ async function importEmailText(formData: FormData) {
   }
   if (!process.env.OPENAI_API_KEY) {
     redirect("/import?status=missing_ai");
+  }
+  const allowance = await consumeAiImportAllowance(companyId);
+  if (!allowance.allowed) {
+    redirect("/import?status=ai_limit");
   }
 
   const file = new File([emailText], "pasted-email.txt", { type: "text/plain" });
@@ -166,9 +175,10 @@ export default async function Page({
 }) {
   const companyId = await requireCompanyId();
   return withRequestContext({ route: "/import", companyId }, async () => {
-    const [settings, session] = await Promise.all([
+    const [settings, session, aiUsage] = await Promise.all([
       withTiming("import.settings", () => getSettingsCached(companyId)),
       getSession(),
+      withTiming("import.ai_usage", () => getAiImportUsage(companyId)),
     ]);
     const { t } = getTranslations(settings?.language);
     const { status, count, code } = searchParams ? await searchParams : {};
@@ -244,6 +254,9 @@ export default async function Page({
         {status === "ai_error" ? (
           <p className="form-error">{t("aiExtractionError")}: {t(aiErrorKey)}</p>
         ) : null}
+        {status === "ai_limit" ? (
+          <p className="form-error">{t("dailyAiLimitReached")}</p>
+        ) : null}
         {status === "review_expired" ? (
           <p className="form-error">{t("reviewImportExpired")}</p>
         ) : null}
@@ -309,9 +322,9 @@ export default async function Page({
             </div>
           ) : (
             <div className="automation-status automation-status-off">
-              <span className="badge badge-warning">{t("notConfigured")}</span>
-              <p>{t("gmailNotConnected")}</p>
-              <a className="form-primary inline-action" href="/api/email/gmail/connect">{t("connectGmail")}</a>
+              <span className="badge badge-warning">{t("comingSoon")}</span>
+              <p>{t("gmailComingSoonText")}</p>
+              <button className="form-primary inline-action" type="button" disabled>{t("connectGmailComingSoon")}</button>
             </div>
           )}
         </section>
@@ -319,6 +332,12 @@ export default async function Page({
         <section className="panel import-panel">
           <div className="panel-title">{t("photoEmailImport")}</div>
           <p className="muted">{t("photoEmailImportText")}</p>
+          <div className={aiUsage.isLimited ? "import-limit-note import-limit-note-warning" : "import-limit-note"}>
+            <strong>{t("freeBetaLimit")}</strong>
+            <span>
+              {aiUsage.used}/{aiUsage.limit} {t("aiImportsUsedToday")} {t("manualCsvStillOpen")}
+            </span>
+          </div>
           <form action={importDocument} className="stack">
             <div className="form-grid form-grid-3">
               <label className="field-label">
@@ -335,7 +354,7 @@ export default async function Page({
               </label>
             </div>
             <div className="import-actions-row">
-              <SubmitButton className="form-primary" idleLabel={t("extractDetails")} pendingLabel={t("extracting")} />
+              <SubmitButton className="form-primary" idleLabel={t("extractDetails")} pendingLabel={t("extracting")} disabled={aiUsage.isLimited} />
               <span className="muted">{t("documentImportNote")}</span>
             </div>
           </form>
@@ -359,7 +378,7 @@ export default async function Page({
               </label>
             </div>
             <div className="import-actions-row">
-              <SubmitButton className="form-primary" idleLabel={t("scanEmailText")} pendingLabel={t("extracting")} />
+              <SubmitButton className="form-primary" idleLabel={t("scanEmailText")} pendingLabel={t("extracting")} disabled={aiUsage.isLimited} />
               <span className="muted">{t("emailTextImportNote")}</span>
             </div>
           </form>
