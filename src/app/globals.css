@@ -1231,6 +1231,11 @@ button.ghost {
   background: white;
 }
 
+[data-theme="dark"] .file-picker {
+  background: #0f1728;
+  border-color: var(--border);
+}
+
 .file-picker-input {
   position: absolute;
   width: 1px;
@@ -1252,6 +1257,11 @@ button.ghost {
   cursor: pointer;
 }
 
+[data-theme="dark"] .file-picker-button {
+  background: rgba(232, 237, 247, 0.12);
+  color: var(--ink);
+}
+
 .file-picker-input:focus-visible + .file-picker-button {
   outline: 3px solid rgba(59, 130, 246, 0.32);
   outline-offset: 2px;
@@ -1264,6 +1274,10 @@ button.ghost {
   white-space: nowrap;
   color: var(--ink);
   font-weight: 600;
+}
+
+[data-theme="dark"] .file-picker-name {
+  color: var(--ink);
 }
 
 .import-actions-row {
