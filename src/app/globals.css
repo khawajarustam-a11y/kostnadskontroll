@@ -37,6 +37,13 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+[data-theme="dark"] body {
+  background:
+    radial-gradient(1100px 720px at 12% -10%, rgba(37, 99, 235, 0.18) 0%, rgba(37, 99, 235, 0) 58%),
+    radial-gradient(900px 560px at 90% 8%, rgba(255, 107, 53, 0.11) 0%, rgba(255, 107, 53, 0) 55%),
+    linear-gradient(180deg, var(--bg-0) 0%, var(--bg-1) 100%);
+}
+
 * {
   box-sizing: border-box;
   padding: 0;
@@ -1519,6 +1526,11 @@ button.ghost {
   background: rgba(255, 255, 255, 0.74);
 }
 
+[data-theme="dark"] .public-nav a:hover,
+[data-theme="dark"] .public-nav .public-login {
+  background: rgba(26, 34, 52, 0.86);
+}
+
 .public-hero {
   display: grid;
   gap: 18px;
@@ -1600,6 +1612,39 @@ button.ghost {
   box-shadow: var(--shadow);
 }
 
+[data-theme="dark"] .public-hero,
+[data-theme="dark"] .public-problem,
+[data-theme="dark"] .public-trust,
+[data-theme="dark"] .public-grid > div,
+[data-theme="dark"] .public-beta-panel,
+[data-theme="dark"] .public-feedback-strip {
+  border-color: rgba(148, 163, 184, 0.24);
+  background: rgba(26, 34, 52, 0.92);
+}
+
+[data-theme="dark"] .public-hero {
+  background:
+    radial-gradient(520px 240px at 100% 0%, rgba(255, 107, 53, 0.18), transparent 62%),
+    radial-gradient(560px 260px at 0% 0%, rgba(37, 99, 235, 0.18), transparent 65%),
+    rgba(26, 34, 52, 0.94);
+}
+
+[data-theme="dark"] .public-trust-list p,
+[data-theme="dark"] .public-theme-options {
+  border-color: rgba(148, 163, 184, 0.24);
+  background: rgba(15, 19, 32, 0.76);
+}
+
+[data-theme="dark"] .public-hero-copy,
+[data-theme="dark"] .public-problem p,
+[data-theme="dark"] .public-trust-list p,
+[data-theme="dark"] .public-grid p,
+[data-theme="dark"] .public-beta-panel p:not(.eyebrow),
+[data-theme="dark"] .public-feedback-strip p:not(.eyebrow),
+[data-theme="dark"] .public-theme-picker p {
+  color: #cfd8ea;
+}
+
 .public-grid > div {
   padding: 18px;
 }
@@ -1635,7 +1680,7 @@ button.ghost {
 
 .public-beta-panel {
   display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
+  grid-template-columns: 1fr;
   gap: 18px;
   align-items: center;
   margin: 18px 0;
@@ -1689,6 +1734,30 @@ button.ghost {
   border-color: rgba(255, 107, 53, 0.38);
   background: rgba(255, 107, 53, 0.1);
   color: var(--ink);
+}
+
+.public-theme-picker-compact {
+  display: block;
+}
+
+.public-theme-picker-compact .public-theme-options {
+  grid-template-columns: repeat(3, auto);
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.public-theme-picker-compact .public-theme-option {
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  line-height: 1;
+}
+
+[data-theme="dark"] .public-theme-picker-compact .public-theme-options {
+  background: rgba(26, 34, 52, 0.86);
 }
 
 .public-feedback-strip {

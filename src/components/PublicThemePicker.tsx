@@ -11,6 +11,10 @@ const OPTIONS: Array<{ value: Mode; label: string }> = [
   { value: "system", label: "System" },
 ];
 
+type PublicThemePickerProps = {
+  compact?: boolean;
+};
+
 function getResolvedTheme(mode: Mode): "light" | "dark" {
   if (mode === "system") {
     return window.matchMedia("(prefers-color-scheme: dark)").matches
@@ -24,7 +28,7 @@ function applyTheme(mode: Mode) {
   document.documentElement.setAttribute("data-theme", getResolvedTheme(mode));
 }
 
-export default function PublicThemePicker() {
+export default function PublicThemePicker({ compact = false }: PublicThemePickerProps) {
   const [mode, setMode] = useState<Mode>("system");
 
   useEffect(() => {
@@ -56,8 +60,11 @@ export default function PublicThemePicker() {
   };
 
   return (
-    <div className="public-theme-picker" aria-label="Website theme">
-      <p>Website theme</p>
+    <div
+      className={compact ? "public-theme-picker public-theme-picker-compact" : "public-theme-picker"}
+      aria-label="Website theme"
+    >
+      {!compact ? <p>Website theme</p> : null}
       <div className="public-theme-options">
         {OPTIONS.map((option) => (
           <button

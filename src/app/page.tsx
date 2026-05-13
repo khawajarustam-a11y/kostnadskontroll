@@ -16,6 +16,7 @@ export default function Home() {
           <Link className="public-login" href="/login">
             Log in
           </Link>
+          <PublicThemePicker compact />
         </nav>
       </header>
 
@@ -86,7 +87,6 @@ export default function Home() {
             the beta period, with clear plans before anything changes.
           </p>
         </div>
-        <PublicThemePicker />
       </section>
 
       <section className="public-feedback-strip">
