@@ -518,7 +518,7 @@ a {
   border: 1px solid rgba(22, 163, 74, 0.34);
 }
 
-.beta-badge {
+.neutral-badge {
   background: rgba(100, 116, 139, 0.12);
   color: #475569;
   border-color: rgba(100, 116, 139, 0.3);
@@ -1604,7 +1604,7 @@ button.ghost {
 }
 
 .public-grid > div,
-.public-beta-panel,
+.public-access-panel,
 .public-feedback-strip {
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -1616,7 +1616,7 @@ button.ghost {
 [data-theme="dark"] .public-problem,
 [data-theme="dark"] .public-trust,
 [data-theme="dark"] .public-grid > div,
-[data-theme="dark"] .public-beta-panel,
+[data-theme="dark"] .public-access-panel,
 [data-theme="dark"] .public-feedback-strip {
   border-color: rgba(148, 163, 184, 0.24);
   background: rgba(26, 34, 52, 0.92);
@@ -1639,7 +1639,7 @@ button.ghost {
 [data-theme="dark"] .public-problem p,
 [data-theme="dark"] .public-trust-list p,
 [data-theme="dark"] .public-grid p,
-[data-theme="dark"] .public-beta-panel p:not(.eyebrow),
+[data-theme="dark"] .public-access-panel p:not(.eyebrow),
 [data-theme="dark"] .public-feedback-strip p:not(.eyebrow),
 [data-theme="dark"] .public-theme-picker p {
   color: #cfd8ea;
@@ -1678,7 +1678,7 @@ button.ghost {
   line-height: 1.5;
 }
 
-.public-beta-panel {
+.public-access-panel {
   display: grid;
   grid-template-columns: 1fr;
   gap: 18px;
@@ -1687,11 +1687,11 @@ button.ghost {
   padding: 20px;
 }
 
-.public-beta-panel h2 {
+.public-access-panel h2 {
   font-size: 22px;
 }
 
-.public-beta-panel p:not(.eyebrow),
+.public-access-panel p:not(.eyebrow),
 .public-theme-picker p {
   margin-top: 8px;
   color: var(--muted);
@@ -1844,7 +1844,7 @@ button.ghost {
   }
 
   .public-grid,
-  .public-beta-panel,
+  .public-access-panel,
   .public-problem,
   .public-trust,
   .feedback-form-grid {

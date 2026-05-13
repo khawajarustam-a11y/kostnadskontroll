@@ -333,7 +333,7 @@ export default async function Page({
           <div className="panel-title">{t("photoEmailImport")}</div>
           <p className="muted">{t("photoEmailImportText")}</p>
           <div className={aiUsage.isLimited ? "import-limit-note import-limit-note-warning" : "import-limit-note"}>
-            <strong>{t("freeBetaLimit")}</strong>
+            <strong>{t("dailyAiImportLimit")}</strong>
             <span>
               {aiUsage.used}/{aiUsage.limit} {t("aiImportsUsedToday")} {t("manualCsvStillOpen")}
             </span>

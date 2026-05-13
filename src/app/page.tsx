@@ -78,20 +78,20 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="pricing" className="public-beta-panel" aria-label="Early access and pricing">
+      <section id="pricing" className="public-access-panel" aria-label="Early access and pricing">
         <div>
           <p className="eyebrow">Early access</p>
           <h2>Try RenewalGuard now. Pricing comes later.</h2>
           <p>
-            We are focused on learning from early users first. Pricing will be introduced after
-            the beta period, with clear plans before anything changes.
+            We are focused on learning from early users first. Pricing will be introduced later,
+            with clear plans before anything changes.
           </p>
         </div>
       </section>
 
       <section className="public-feedback-strip">
         <div>
-          <p className="eyebrow">Beta feedback</p>
+          <p className="eyebrow">Early feedback</p>
           <h2>Trying it? Tell us what feels confusing, useful, or missing.</h2>
           <p>RenewalGuard is new. Your feedback helps shape what we build next.</p>
         </div>
