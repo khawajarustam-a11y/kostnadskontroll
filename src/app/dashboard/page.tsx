@@ -227,7 +227,23 @@ export default async function Page() {
 
         <h2 className="section-title">{t("actionRequiredPreview")}</h2>
         {riskItems.length === 0 ? (
-          <p className="muted">{t("allClearText")}</p>
+          <section className="alert-panel alert-panel-safe dashboard-empty-state">
+            <div className="alert-panel-header">
+              <span className="badge badge-safe">{t("notice")}</span>
+              <h2>{t("allClearTitle")}</h2>
+            </div>
+            <p className="muted">{t("allClearText")}</p>
+            {!hasProtectedData ? (
+              <div className="page-actions">
+                <Link className="form-primary" href="/import">
+                  {t("importFirstContract")}
+                </Link>
+                <Link className="form-secondary" href="/contracts/new">
+                  {t("addContractManually")}
+                </Link>
+              </div>
+            ) : null}
+          </section>
         ) : (
           <div className="action-list action-list-compact">
             {riskItems.slice(0, 5).map(({ contract, risk }) => {

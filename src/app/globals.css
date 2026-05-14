@@ -1213,6 +1213,14 @@ button.ghost {
   background: rgba(239, 68, 68, 0.06);
 }
 
+.import-trust-note {
+  margin: -6px 0 16px;
+}
+
+.dashboard-empty-state .page-actions {
+  margin-top: 14px;
+}
+
 .muted-panel {
   opacity: 0.82;
 }

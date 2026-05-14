@@ -312,8 +312,8 @@ export default async function Page({
           <p className="muted">{t("connectedInboxText")}</p>
           <p className="muted trust-copy">{t("gmailTrustText")}</p>
           {gmailConnection ? (
-            <div className="automation-status automation-status-on">
-              <span className="badge badge-safe">{t("active")}</span>
+            <div className="automation-status automation-status-off">
+              <span className="badge badge-warning">{t("comingSoon")}</span>
               <p>{t("connectedGmail")}: {gmailConnection.email}</p>
               <p>{t("gmailSearchComingSoon")}</p>
               <form action="/api/email/gmail/disconnect" method="post">
@@ -338,6 +338,7 @@ export default async function Page({
               {aiUsage.used}/{aiUsage.limit} {t("aiImportsUsedToday")} {t("manualCsvStillOpen")}
             </span>
           </div>
+          <p className="muted import-trust-note">{t("aiImportTrustText")}</p>
           <form action={importDocument} className="stack">
             <div className="form-grid form-grid-3">
               <label className="field-label">
