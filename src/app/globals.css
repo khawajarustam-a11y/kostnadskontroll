@@ -454,6 +454,33 @@ a {
   background: rgba(22, 163, 74, 0.12);
 }
 
+[data-theme="dark"] .onboarding-panel {
+  border-color: rgba(255, 107, 53, 0.48);
+  border-left-color: #ff6b35;
+  background:
+    radial-gradient(520px 240px at 0% 0%, rgba(255, 107, 53, 0.16), transparent 68%),
+    linear-gradient(135deg, rgba(31, 41, 61, 0.96), rgba(18, 24, 38, 0.98));
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.32);
+}
+
+[data-theme="dark"] .onboarding-panel h2 {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .onboarding-panel .muted {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .onboarding-steps div {
+  border-color: rgba(148, 163, 184, 0.24);
+  background: rgba(15, 23, 42, 0.72);
+  color: #e8edf7;
+}
+
+[data-theme="dark"] .onboarding-steps strong {
+  color: #ffffff;
+}
+
 [data-theme="dark"] .form-section,
 [data-theme="dark"] .cost-form-panel,
 [data-theme="dark"] .view-switch,
