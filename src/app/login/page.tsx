@@ -42,7 +42,7 @@ export default async function Page({
   }
   const defaultLanguage = process.env.DEFAULT_LANGUAGE === "NO" ? "NO" : "EN";
   const { t } = getTranslations(defaultLanguage);
-  const signInLabel = t("signIn") || "Logg inn";
+  const signInLabel = t("signIn") || "Sign in";
   const { error } = searchParams ? await searchParams : {};
   const errorMessage = error === "missing_login"
     ? t("errorMissingLogin")

@@ -37,7 +37,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ## Automation
 
-Contract reminders run through Vercel Cron at `/api/reminders/daily`. On Vercel Hobby, the cron runs once per day.
+Reminder automation runs through Vercel Cron at `/api/reminders/daily`.
 
 Required environment variables:
 
