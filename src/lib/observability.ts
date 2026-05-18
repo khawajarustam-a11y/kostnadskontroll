@@ -81,13 +81,17 @@ export function withRequestContext<T>(context: Partial<RequestContext>, fn: () =
     companyId: context.companyId ?? current?.companyId,
     userId: context.userId ?? current?.userId,
   };
-  return contextStore.run(nextContext, () => {
-    Sentry.setTag("requestId", nextContext.requestId);
-    if (nextContext.route) Sentry.setTag("route", nextContext.route);
-    if (nextContext.companyId) Sentry.setTag("companyId", nextContext.companyId);
-    if (nextContext.userId) Sentry.setTag("userId", nextContext.userId);
-    return fn();
-  });
+  try {
+    return contextStore.run(nextContext, () => {
+      Sentry.setTag("requestId", nextContext.requestId);
+      if (nextContext.route) Sentry.setTag("route", nextContext.route);
+      if (nextContext.companyId) Sentry.setTag("companyId", nextContext.companyId);
+      if (nextContext.userId) Sentry.setTag("userId", nextContext.userId);
+      return fn();
+    });
+  } catch (error) {
+    throw error;
+  }
 }
 
 export function getRequestContext() {
