@@ -5,6 +5,12 @@ type FeedbackPageProps = {
   searchParams?: Promise<{ status?: string }>;
 };
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function isValidEmail(value: string) {
+  return value.length <= 254 && EMAIL_PATTERN.test(value);
+}
+
 function escapeHtml(value: string) {
   return value
     .replace(/&/g, "&amp;")
@@ -25,6 +31,9 @@ async function sendFeedbackEmail(formData: FormData) {
 
   if (!email || !message) {
     redirect("/feedback?status=missing");
+  }
+  if (!isValidEmail(email) || name.length > 100 || role.length > 80 || interest.length > 120 || message.length > 4000) {
+    redirect("/feedback?status=invalid");
   }
 
   const apiKey = process.env.RESEND_API_KEY;
@@ -51,9 +60,9 @@ async function sendFeedbackEmail(formData: FormData) {
       from: fromEmail,
       to: [toEmail],
       reply_to: email,
-      subject: "New RenewalGuard feedback",
+      subject: "New DueSentry feedback",
       html: `
-        <h2>New RenewalGuard feedback</h2>
+        <h2>New DueSentry feedback</h2>
         <p><strong>Name:</strong> ${safeName}</p>
         <p><strong>Email:</strong> ${safeEmail}</p>
         <p><strong>Role:</strong> ${safeRole}</p>
@@ -62,7 +71,7 @@ async function sendFeedbackEmail(formData: FormData) {
         <p>${safeMessage}</p>
       `,
       text: [
-        "New RenewalGuard feedback",
+        "New DueSentry feedback",
         `Name: ${name || "Anonymous"}`,
         `Email: ${email}`,
         `Role: ${role || "Not provided"}`,
@@ -88,12 +97,12 @@ export default async function FeedbackPage({ searchParams }: FeedbackPageProps) 
     <div className="page public-page">
       <div className="page-header">
         <p className="eyebrow">Feedback</p>
-        <h1 className="page-title">Help shape RenewalGuard</h1>
+        <h1 className="page-title">Help shape DueSentry</h1>
         <p className="page-hero">
           Tell us what would make this useful enough for you to trust it with your renewals.
         </p>
         <p className="feedback-intro">
-          RenewalGuard is new. Your feedback helps shape what we build next.
+          DueSentry is new. Your feedback helps shape what we build next.
         </p>
       </div>
 
@@ -107,6 +116,12 @@ export default async function FeedbackPage({ searchParams }: FeedbackPageProps) 
       {status === "missing" ? (
         <div className="feedback-status feedback-status-warning">
           Please add your email and a short message before sending.
+        </div>
+      ) : null}
+
+      {status === "invalid" ? (
+        <div className="feedback-status feedback-status-warning">
+          Please use a valid email and keep the message under 4,000 characters.
         </div>
       ) : null}
 

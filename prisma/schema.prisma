@@ -25,12 +25,15 @@ enum LedgerEntryType {
 }
 
 model Company {
-  id        String   @id @default(cuid())
-  name      String
-  country   String?
-  timezone  String   @default("Europe/Oslo")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String    @id @default(cuid())
+  name              String
+  country           String?
+  timezone          String    @default("Europe/Oslo")
+  deleteRequestedAt DateTime?
+  deleteScheduledAt DateTime?
+  deletedAt         DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   settings  Settings?
   costs     Cost[]
@@ -38,6 +41,9 @@ model Company {
   ledger    LedgerEntry[]
   users     User[]
   emailConnections EmailConnection[]
+
+  @@index([deleteScheduledAt])
+  @@index([deletedAt])
 }
 
 model Settings {
@@ -146,15 +152,21 @@ model LedgerEntry {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  companyId    String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                String    @id @default(cuid())
+  email             String    @unique
+  name              String?
+  passwordHash      String
+  companyId         String
+  deleteRequestedAt DateTime?
+  deleteScheduledAt DateTime?
+  deletedAt         DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   company Company @relation(fields: [companyId], references: [id])
   emailConnections EmailConnection[]
 
   @@index([companyId])
+  @@index([deleteScheduledAt])
+  @@index([deletedAt])
 }

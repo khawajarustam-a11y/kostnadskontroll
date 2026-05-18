@@ -20,7 +20,7 @@ async function main() {
   await prisma.settings.deleteMany();
   await prisma.company.deleteMany();
 
-  const demoEmail = process.env.DEMO_USER_EMAIL ?? "demo@kostnadskontroll.no";
+  const demoEmail = process.env.DEMO_USER_EMAIL ?? "demo@duesentry.com";
   const demoPassword = process.env.DEMO_USER_PASSWORD ?? "Demo1234";
   const passwordHash = await bcrypt.hash(demoPassword, 10);
 

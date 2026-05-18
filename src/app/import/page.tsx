@@ -15,6 +15,10 @@ export const runtime = "nodejs";
 
 type ImportType = "contracts" | "costs" | "ledger";
 
+const MAX_CSV_ROWS = 20;
+const MAX_IMPORT_FILE_SIZE = 5 * 1024 * 1024;
+const MAX_EMAIL_TEXT_LENGTH = 20000;
+
 function parseCsv(text: string): Record<string, string>[] {
   const rows: string[][] = [];
   let current = "";
@@ -73,11 +77,15 @@ async function importCsv(formData: FormData) {
     redirect("/import?status=missing_file");
   }
 
+  if (file.size > MAX_IMPORT_FILE_SIZE) {
+    redirect("/import?status=file_too_large");
+  }
+
   const rows = parseCsv(await file.text());
   if (rows.length === 0) {
     redirect("/import?status=empty_file");
   }
-  if (rows.length > 20) {
+  if (rows.length > MAX_CSV_ROWS) {
     redirect("/import?status=csv_too_large");
   }
 
@@ -96,6 +104,9 @@ async function importDocument(formData: FormData) {
   const file = formData.get("document");
   if (!(file instanceof File) || file.size === 0) {
     redirect("/import?status=missing_file");
+  }
+  if (file.size > MAX_IMPORT_FILE_SIZE) {
+    redirect("/import?status=file_too_large");
   }
   if (!process.env.OPENAI_API_KEY) {
     redirect("/import?status=missing_ai");
@@ -135,6 +146,9 @@ async function importEmailText(formData: FormData) {
   const emailText = String(formData.get("emailText") ?? "").trim();
   if (emailText.length < 20) {
     redirect("/import?status=missing_email_text");
+  }
+  if (emailText.length > MAX_EMAIL_TEXT_LENGTH) {
+    redirect("/import?status=email_text_too_large");
   }
   if (!process.env.OPENAI_API_KEY) {
     redirect("/import?status=missing_ai");
@@ -193,16 +207,6 @@ export default async function Page({
           select: { email: true, updatedAt: true },
         }).catch(() => null)
       : null;
-    const openAiKey = process.env.OPENAI_API_KEY?.trim() ?? "";
-    const detectedOpenAiKeys = Object.keys(process.env)
-      .filter((key) => key.toUpperCase().includes("OPENAI") || key.toUpperCase().includes("OPEN_AI"))
-      .sort();
-    const vercelEnv = process.env.VERCEL_ENV ?? "unknown";
-    const aiStatus = openAiKey
-      ? openAiKey.startsWith("sk-")
-        ? t("aiKeyLooksValid")
-        : t("aiKeyWrongFormat")
-      : t("aiKeyMissing");
     const aiErrorKeys: Record<string, TranslationKey> = {
       invalid_key: "aiError_invalid_key",
       forbidden: "aiError_forbidden",
@@ -241,12 +245,13 @@ export default async function Page({
           <p className="form-error">{t("csvTooLarge")}</p>
         ) : null}
         {status === "missing_ai" ? (
-          <div className="form-error import-config-error">
-            <p>{t("missingAiKey")}</p>
-            <p>{t("aiKeyStatus")}: {aiStatus}</p>
-            <p>{t("vercelEnvironment")}: {vercelEnv}</p>
-            <p>{t("detectedOpenAiVariables")}: {detectedOpenAiKeys.length > 0 ? detectedOpenAiKeys.join(", ") : t("none")}</p>
-          </div>
+          <p className="form-error">{t("missingAiKey")}</p>
+        ) : null}
+        {status === "file_too_large" ? (
+          <p className="form-error">{t("fileTooLarge")}</p>
+        ) : null}
+        {status === "email_text_too_large" ? (
+          <p className="form-error">{t("emailTextTooLarge")}</p>
         ) : null}
         {status === "no_extraction" ? (
           <p className="form-error">{t("noExtraction")}</p>

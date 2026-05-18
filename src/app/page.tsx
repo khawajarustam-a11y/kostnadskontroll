@@ -1,12 +1,39 @@
 import Link from "next/link";
 import PublicThemePicker from "@/components/PublicThemePicker";
 
+const riskItems = [
+  { name: "Canva Pro", detail: "Renews in 8 days", amount: "$119.99", tone: "warning" },
+  { name: "Figma", detail: "Cancel by May 24", amount: "$15.00", tone: "danger" },
+  { name: "Adobe Creative Cloud", detail: "Protected", amount: "$59.00", tone: "safe" },
+] as const;
+
+const workflow = [
+  {
+    title: "Import documents",
+    text: "Upload a file, paste email text, or add a contract manually when you already know the details.",
+  },
+  {
+    title: "Review what AI found",
+    text: "Check the vendor, price, renewal date, and cancellation deadline before anything is saved.",
+  },
+  {
+    title: "Get reminded",
+    text: "Email reminders help you act before subscriptions or contracts renew.",
+  },
+] as const;
+
+const trustItems = [
+  "No hidden auto-save after import.",
+  "You can edit extracted details before saving.",
+  "Connected inbox scanning is optional and stays under your control.",
+] as const;
+
 export default function Home() {
   return (
     <div className="page public-page">
       <header className="public-header">
         <Link className="public-brand" href="/">
-          RenewalGuard
+          DueSentry
         </Link>
         <nav className="public-nav" aria-label="Public navigation">
           <Link href="#how-it-works">How it works</Link>
@@ -20,82 +47,178 @@ export default function Home() {
         </nav>
       </header>
 
-      <section className="public-hero">
-        <p className="eyebrow">Early access</p>
-        <h1>Never miss a renewal or cancellation deadline again.</h1>
-        <p className="public-hero-copy">
-          RenewalGuard helps freelancers and small teams find contracts, review upcoming charges,
-          and get reminders before money leaves the account.
-        </p>
-        <div className="page-actions">
-          <Link className="form-primary" href="/login">
-            Try RenewalGuard
-          </Link>
-          <Link className="form-secondary" href="/feedback">
-            Send feedback
-          </Link>
-        </div>
-      </section>
-
-      <section className="public-problem" aria-label="Problem RenewalGuard solves">
-        <div>
-          <p className="eyebrow">The problem</p>
-          <h2>Subscriptions renew quietly. Contracts expire. Cancellation dates get missed.</h2>
-        </div>
-        <p>
-          RenewalGuard is built for people who use many tools and do not want to keep every
-          renewal date in their head. The goal is simple: know what can charge you before it happens.
-        </p>
-      </section>
-
-      <section id="how-it-works" className="public-grid" aria-label="How RenewalGuard works">
-        <div>
-          <span>1</span>
-          <h2>Import documents</h2>
-          <p>Upload a file, paste email text, or add a contract manually when you already know the details.</p>
-        </div>
-        <div>
-          <span>2</span>
-          <h2>Review what AI found</h2>
-          <p>Check the vendor, price, renewal date, and cancellation deadline before anything is saved.</p>
-        </div>
-        <div>
-          <span>3</span>
-          <h2>Get reminded</h2>
-          <p>Email reminders help users act before subscriptions or contracts renew automatically.</p>
-        </div>
-      </section>
-
-      <section id="trust" className="public-trust" aria-label="Trust and privacy">
-        <div>
-          <p className="eyebrow">Built for control</p>
-          <h2>You review everything before it becomes part of your account.</h2>
-        </div>
-        <div className="public-trust-list">
-          <p>No hidden auto-save after import.</p>
-          <p>You can edit extracted details before saving.</p>
-          <p>Connected inbox scanning is optional and will stay under your control.</p>
-        </div>
-      </section>
-
-      <section id="pricing" className="public-access-panel" aria-label="Early access and pricing">
-        <div>
-          <p className="eyebrow">Early access</p>
-          <h2>Try RenewalGuard now. Pricing comes later.</h2>
+      <section className="public-hero public-hero-redesign">
+        <div className="public-hero-content">
+          <p className="public-eyebrow">New</p>
+          <h1>Never miss subscription and contract renewals again.</h1>
           <p>
-            We are focused on learning from early users first. Pricing will be introduced later,
-            with clear plans before anything changes.
+            DueSentry helps freelancers and small teams upload contracts, invoices, and emails,
+            then shows renewal dates, cancellation deadlines, and possible charges before they
+            surprise you.
+          </p>
+          <div className="public-hero-actions">
+            <Link className="public-primary-cta" href="/login">
+              Try DueSentry
+            </Link>
+            <Link className="public-secondary-cta" href="/feedback">
+              Send feedback
+            </Link>
+          </div>
+          <div className="public-proof-row" aria-label="Key product promises">
+            <span>AI import</span>
+            <span>Email reminders</span>
+            <span>Review before saving</span>
+          </div>
+        </div>
+
+        <div className="public-product-preview" aria-label="DueSentry product preview">
+          <div className="public-preview-shell">
+            <div className="public-preview-top">
+              <strong>DueSentry</strong>
+              <span>Protected</span>
+            </div>
+            <div className="public-preview-alert">
+              <div>
+                <span>Possible charge detected</span>
+                <strong>Canva Pro renews in 8 days</strong>
+              </div>
+              <b>$119.99</b>
+            </div>
+            <div className="public-preview-metrics">
+              <div>
+                <span>Protected contracts</span>
+                <strong>12</strong>
+              </div>
+              <div>
+                <span>Action items</span>
+                <strong>3</strong>
+              </div>
+              <div>
+                <span>Monthly risk</span>
+                <strong>$247</strong>
+              </div>
+            </div>
+            <div className="public-preview-list">
+              {riskItems.map((item) => (
+                <div className={"public-preview-row public-preview-row-" + item.tone} key={item.name}>
+                  <div>
+                    <strong>{item.name}</strong>
+                    <span>{item.detail}</span>
+                  </div>
+                  <b>{item.amount}</b>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="public-feature-band">
+        <div className="public-feature-copy">
+          <p className="public-eyebrow">The problem</p>
+          <h2>Subscriptions renew quietly. Contracts expire. Cancellation dates get missed.</h2>
+          <p>
+            DueSentry is built for people who use many tools and do not want to keep every renewal
+            date in their head.
           </p>
         </div>
+        <div className="public-risk-stack">
+          <div className="public-risk-card">
+            <span>01</span>
+            <strong>Forgotten renewals</strong>
+            <p>Know what can charge you next before money leaves the account.</p>
+          </div>
+          <div className="public-risk-card">
+            <span>02</span>
+            <strong>Silent price changes</strong>
+            <p>Keep vendor, amount, and renewal details visible in one place.</p>
+          </div>
+          <div className="public-risk-card">
+            <span>03</span>
+            <strong>Missed cancel windows</strong>
+            <p>Track cancel-by dates before contracts lock in again.</p>
+          </div>
+        </div>
       </section>
 
-      <section className="public-feedback-strip">
+      <section id="how-it-works" className="public-workflow-grid">
+        {workflow.map((step, index) => (
+          <article className="public-workflow-card" key={step.title}>
+            <span className="public-card-index">{index + 1}</span>
+            <h3>{step.title}</h3>
+            <p>{step.text}</p>
+          </article>
+        ))}
+      </section>
+
+      <section className="public-automation-panel">
         <div>
-          <p className="eyebrow">Early feedback</p>
-          <h2>Trying it? Tell us what feels confusing, useful, or missing.</h2>
-          <p>RenewalGuard is new. Your feedback helps shape what we build next.</p>
+          <p className="public-eyebrow">Automation</p>
+          <h2>Designed for the way contracts arrive.</h2>
+          <p>
+            Start simple: upload documents, paste email text, or add a contract manually. Connected
+            inbox scanning can come later when you are ready.
+          </p>
         </div>
-        <Link className="form-primary" href="/feedback">
+        <div className="public-pipeline">
+          <div className="public-pipeline-card">
+            <strong>Upload files</strong>
+            <span>PDFs, screenshots, invoices, and contract text.</span>
+          </div>
+          <div className="public-pipeline-card">
+            <strong>Paste emails</strong>
+            <span>Copy renewal emails from Gmail or Outlook and scan them instantly.</span>
+          </div>
+          <div className="public-pipeline-card">
+            <strong>Review before saving</strong>
+            <span>You decide what becomes part of your account.</span>
+          </div>
+          <div className="public-pipeline-card">
+            <strong>Reminders before deadlines</strong>
+            <span>Act before renewal and cancellation dates pass.</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="trust" className="public-trust public-trust-redesign">
+        <div>
+          <p className="public-eyebrow">Trust</p>
+          <h2>You stay in control.</h2>
+          <p>
+            DueSentry is built around review-first automation, so imported data is checked before it
+            becomes part of your account.
+          </p>
+        </div>
+        <div className="public-trust-grid">
+          {trustItems.map((item) => (
+            <div className="public-trust-card" key={item}>
+              {item}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="pricing" className="public-pricing-panel">
+        <div>
+          <p className="public-eyebrow">Pricing</p>
+          <h2>Free to try while we learn. Pricing comes later.</h2>
+          <p>
+            We are learning from early users first. Paid plans will be introduced later with clear
+            limits before anything changes.
+          </p>
+        </div>
+        <Link className="public-secondary-cta" href="/login">
+          Start free
+        </Link>
+      </section>
+
+      <section className="public-feedback-strip public-feedback-redesign">
+        <div>
+          <p className="public-eyebrow">Feedback</p>
+          <h2>Trying it? Tell us what feels confusing, useful, or missing.</h2>
+          <p>DueSentry is new. Your feedback helps shape what we build next.</p>
+        </div>
+        <Link className="public-primary-cta" href="/feedback">
           Give feedback
         </Link>
       </section>

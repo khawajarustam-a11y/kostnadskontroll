@@ -1,4 +1,4 @@
-﻿import { cookies } from "next/headers";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { SignJWT, jwtVerify } from "jose";
 
@@ -10,6 +10,7 @@ export type SessionPayload = {
 const SESSION_COOKIE = "kk_session";
 const SESSION_MAX_AGE = 60 * 60 * 24 * 7;
 const AUTH_REQUIRED = process.env.AUTH_REQUIRED === "true";
+const SECURE_COOKIE = process.env.NODE_ENV === "production";
 
 function getSecret(): Uint8Array {
   const secret = process.env.AUTH_SECRET;
@@ -33,6 +34,7 @@ export async function createSession(payload: SessionPayload) {
   store.set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
+    secure: SECURE_COOKIE,
     path: "/",
     maxAge: SESSION_MAX_AGE,
   });
@@ -57,6 +59,7 @@ export async function clearSession() {
   store.set(SESSION_COOKIE, "", {
     httpOnly: true,
     sameSite: "lax",
+    secure: SECURE_COOKIE,
     path: "/",
     maxAge: 0,
   });

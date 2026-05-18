@@ -9,7 +9,7 @@ type AppShellProps = {
   hasSession: boolean;
 };
 
-const publicPaths = new Set(["/", "/feedback", "/login"]);
+const publicPaths = new Set(["/", "/feedback", "/login", "/signup"]);
 
 export function AppShell({ authRequired, children, hasSession }: AppShellProps) {
   const pathname = usePathname();
@@ -22,7 +22,7 @@ export function AppShell({ authRequired, children, hasSession }: AppShellProps) 
   return (
     <div className="app-shell">
       <aside className="app-nav">
-        <div className="brand">RenewalGuard</div>
+        <div className="brand">DueSentry</div>
         <AppNav hasSession={hasSession} authRequired={authRequired} />
       </aside>
       <main className="app-main">{children}</main>

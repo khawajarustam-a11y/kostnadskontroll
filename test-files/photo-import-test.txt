@@ -1,0 +1,9 @@
+Subscription agreement
+Service: Canva Pro
+Supplier: Canva
+Monthly price: 12 USD
+Start date: 2026-05-01
+End date: 2027-05-01
+Renewal date: 2027-05-01
+Cancel by date: 2027-04-20
+Notes: This is a test document for photo/email import.

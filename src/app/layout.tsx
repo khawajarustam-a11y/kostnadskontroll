@@ -16,7 +16,7 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "RenewalGuard",
+  title: "DueSentry",
   description: "Never miss a renewal or cancellation deadline.",
 };
 

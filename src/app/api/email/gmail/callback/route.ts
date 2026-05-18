@@ -3,11 +3,13 @@ import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth";
 import { getGmailRedirectUri, GoogleTokenResponse, GoogleUserInfo } from "@/lib/gmail-oauth";
 import { prisma } from "@/lib/prisma";
+import { encryptSecret } from "@/lib/secret-box";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const GMAIL_STATE_COOKIE = "kk_gmail_oauth_state";
+const SECURE_COOKIE = process.env.NODE_ENV === "production";
 
 async function exchangeCodeForTokens(code: string) {
   const response = await fetch("https://oauth2.googleapis.com/token", {
@@ -50,6 +52,7 @@ export async function GET(request: Request) {
   store.set(GMAIL_STATE_COOKIE, "", {
     httpOnly: true,
     sameSite: "lax",
+    secure: SECURE_COOKIE,
     path: "/",
     maxAge: 0,
   });
@@ -67,6 +70,8 @@ export async function GET(request: Request) {
     }
 
     const expiresAt = tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000) : null;
+    const encryptedAccessToken = encryptSecret(tokens.access_token);
+    const encryptedRefreshToken = tokens.refresh_token ? encryptSecret(tokens.refresh_token) : null;
 
     await prisma.emailConnection.upsert({
       where: {
@@ -78,8 +83,8 @@ export async function GET(request: Request) {
       },
       update: {
         companyId: session.companyId,
-        accessToken: tokens.access_token,
-        refreshToken: tokens.refresh_token,
+        accessToken: encryptedAccessToken,
+        refreshToken: encryptedRefreshToken,
         scope: tokens.scope,
         expiresAt,
       },
@@ -88,8 +93,8 @@ export async function GET(request: Request) {
         userId: session.userId,
         provider: "gmail",
         email,
-        accessToken: tokens.access_token,
-        refreshToken: tokens.refresh_token,
+        accessToken: encryptedAccessToken,
+        refreshToken: encryptedRefreshToken,
         scope: tokens.scope,
         expiresAt,
       },

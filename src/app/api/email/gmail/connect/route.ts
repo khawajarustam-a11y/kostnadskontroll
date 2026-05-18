@@ -7,6 +7,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const GMAIL_STATE_COOKIE = "kk_gmail_oauth_state";
+const SECURE_COOKIE = process.env.NODE_ENV === "production";
 
 export async function GET() {
   await requireSession();
@@ -19,6 +20,7 @@ export async function GET() {
   store.set(GMAIL_STATE_COOKIE, state, {
     httpOnly: true,
     sameSite: "lax",
+    secure: SECURE_COOKIE,
     path: "/",
     maxAge: 60 * 10,
   });
