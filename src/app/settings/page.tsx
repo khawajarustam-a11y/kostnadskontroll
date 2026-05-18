@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getTranslations, type Language } from "@/lib/i18n";
 import type { Currency } from "@prisma/client";
@@ -45,8 +46,85 @@ function accountMessage(code?: string) {
       return "That email is already used by another account.";
     case "confirm_delete":
       return "Type DELETE to confirm account deletion.";
+    case "account_management_unavailable":
+      return "Account deletion is unavailable until the latest database migration is applied.";
     default:
       return null;
+  }
+}
+
+function isMissingColumnError(error: unknown) {
+  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2022";
+}
+
+async function updateCompanyTimezone(companyId: string, timezone: string) {
+  try {
+    await prisma.company.upsert({
+      where: { id: companyId },
+      update: { timezone },
+      create: { id: companyId, name: "Workspace", timezone },
+    });
+  } catch (error) {
+    if (!isMissingColumnError(error)) {
+      throw error;
+    }
+  }
+}
+
+async function getCompanyForSettings(companyId: string) {
+  try {
+    const company = await prisma.company.findUnique({
+      where: { id: companyId },
+      select: { timezone: true, deleteScheduledAt: true },
+    });
+
+    return {
+      timezone: company?.timezone ?? "Europe/Oslo",
+      deleteScheduledAt: company?.deleteScheduledAt ?? null,
+      accountDeletionAvailable: true,
+    };
+  } catch (error) {
+    if (!isMissingColumnError(error)) {
+      throw error;
+    }
+
+    return {
+      timezone: "Europe/Oslo",
+      deleteScheduledAt: null,
+      accountDeletionAvailable: false,
+    };
+  }
+}
+
+async function getUserForSettings(userId: string) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true, email: true, deleteScheduledAt: true },
+    });
+
+    return {
+      name: user?.name ?? null,
+      email: user?.email ?? null,
+      deleteScheduledAt: user?.deleteScheduledAt ?? null,
+      accountDeletionAvailable: true,
+    };
+  } catch (error) {
+    if (!isMissingColumnError(error)) {
+      throw error;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true, email: true },
+    });
+
+    return {
+      name: user?.name ?? null,
+      email: user?.email ?? null,
+      deleteScheduledAt: null,
+      accountDeletionAvailable: false,
+    };
   }
 }
 
@@ -59,11 +137,7 @@ async function updateSettings(formData: FormData) {
   const defaultAlertDays = clampAlertDays(formData.get("defaultAlertDays"), 30);
   const timezone = String(formData.get("timezone") ?? "Europe/Oslo");
 
-  await prisma.company.upsert({
-    where: { id: companyId },
-    update: { timezone },
-    create: { id: companyId, name: "Workspace", timezone },
-  });
+  await updateCompanyTimezone(companyId, timezone);
 
   await prisma.settings.upsert({
     where: { companyId },
@@ -132,16 +206,23 @@ async function requestAccountDeletion(formData: FormData) {
   const now = new Date();
   const scheduled = new Date(now.getTime() + DELETE_WINDOW_MS);
 
-  await prisma.$transaction([
-    prisma.company.update({
-      where: { id: session.companyId },
-      data: { deleteRequestedAt: now, deleteScheduledAt: scheduled },
-    }),
-    prisma.user.updateMany({
-      where: { companyId: session.companyId },
-      data: { deleteRequestedAt: now, deleteScheduledAt: scheduled },
-    }),
-  ]);
+  try {
+    await prisma.$transaction([
+      prisma.company.update({
+        where: { id: session.companyId },
+        data: { deleteRequestedAt: now, deleteScheduledAt: scheduled },
+      }),
+      prisma.user.updateMany({
+        where: { companyId: session.companyId },
+        data: { deleteRequestedAt: now, deleteScheduledAt: scheduled },
+      }),
+    ]);
+  } catch (error) {
+    if (!isMissingColumnError(error)) {
+      throw error;
+    }
+    redirect("/settings?account=account_management_unavailable");
+  }
 
   revalidatePath("/settings");
   redirect("/settings?account=delete_requested");
@@ -151,16 +232,23 @@ async function restoreAccount() {
   "use server";
   const session = await requireSession();
 
-  await prisma.$transaction([
-    prisma.company.update({
-      where: { id: session.companyId },
-      data: { deleteRequestedAt: null, deleteScheduledAt: null, deletedAt: null },
-    }),
-    prisma.user.updateMany({
-      where: { companyId: session.companyId },
-      data: { deleteRequestedAt: null, deleteScheduledAt: null, deletedAt: null },
-    }),
-  ]);
+  try {
+    await prisma.$transaction([
+      prisma.company.update({
+        where: { id: session.companyId },
+        data: { deleteRequestedAt: null, deleteScheduledAt: null, deletedAt: null },
+      }),
+      prisma.user.updateMany({
+        where: { companyId: session.companyId },
+        data: { deleteRequestedAt: null, deleteScheduledAt: null, deletedAt: null },
+      }),
+    ]);
+  } catch (error) {
+    if (!isMissingColumnError(error)) {
+      throw error;
+    }
+    redirect("/settings?account=account_management_unavailable");
+  }
 
   revalidatePath("/settings");
   redirect("/settings?account=restored");
@@ -177,18 +265,8 @@ export default async function Page({
 
   return withRequestContext({ route: "/settings", companyId }, async () => {
     const settings = await withTiming("settings.load", () => getSettingsCached(companyId));
-    const company = await withTiming("settings.company", () =>
-      prisma.company.findUnique({
-        where: { id: companyId },
-        select: { timezone: true, deleteScheduledAt: true },
-      })
-    );
-    const user = await withTiming("settings.user", () =>
-      prisma.user.findUnique({
-        where: { id: session.userId },
-        select: { name: true, email: true, deleteScheduledAt: true },
-      })
-    );
+    const company = await withTiming("settings.company", () => getCompanyForSettings(companyId));
+    const user = await withTiming("settings.user", () => getUserForSettings(session.userId));
     const { t, language } = getTranslations(settings?.language);
     const saveLabel = t("save") || (language === "NO" ? "Lagre" : "Save");
     const reminderConfigured = Boolean(
@@ -204,6 +282,7 @@ export default async function Page({
     const formBaseCurrency = (settings?.baseCurrency ?? "USD") as Currency;
     const message = accountMessage(account);
     const deleteScheduledAt = user?.deleteScheduledAt ?? company?.deleteScheduledAt ?? null;
+    const accountDeletionAvailable = user.accountDeletionAvailable && company.accountDeletionAvailable;
     const deleteDate = deleteScheduledAt
       ? deleteScheduledAt.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
       : null;
@@ -267,27 +346,29 @@ export default async function Page({
             </div>
           </form>
 
-          <div className="danger-zone">
-            <div>
-              <h3>Delete account</h3>
-              <p>
-                Schedule your account for deletion. You can restore it for {DELETE_WINDOW_DAYS} days. After that, your contracts, costs, accounting entries, imports, and settings are permanently removed.
-              </p>
-            </div>
-            {deleteDate ? (
-              <div className="account-actions">
-                <p className="account-message">Deletion scheduled for {deleteDate}.</p>
-                <form action={restoreAccount}>
-                  <button type="submit" className="secondary-button">Restore account</button>
-                </form>
+          {accountDeletionAvailable ? (
+            <div className="danger-zone">
+              <div>
+                <h3>Delete account</h3>
+                <p>
+                  Schedule your account for deletion. You can restore it for {DELETE_WINDOW_DAYS} days. After that, your contracts, costs, accounting entries, imports, and settings are permanently removed.
+                </p>
               </div>
-            ) : (
-              <form action={requestAccountDeletion} className="account-actions">
-                <input name="confirm" placeholder="Type DELETE to confirm" aria-label="Type DELETE to confirm" />
-                <button type="submit" className="danger-button">Schedule account deletion</button>
-              </form>
-            )}
-          </div>
+              {deleteDate ? (
+                <div className="account-actions">
+                  <p className="account-message">Deletion scheduled for {deleteDate}.</p>
+                  <form action={restoreAccount}>
+                    <button type="submit" className="secondary-button">Restore account</button>
+                  </form>
+                </div>
+              ) : (
+                <form action={requestAccountDeletion} className="account-actions">
+                  <input name="confirm" placeholder="Type DELETE to confirm" aria-label="Type DELETE to confirm" />
+                  <button type="submit" className="danger-button">Schedule account deletion</button>
+                </form>
+              )}
+            </div>
+          ) : null}
         </section>
 
         <section className="panel automation-status-panel">
