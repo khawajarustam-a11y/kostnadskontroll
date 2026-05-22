@@ -9,7 +9,7 @@ type AppShellProps = {
   hasSession: boolean;
 };
 
-const publicPaths = new Set(["/", "/feedback", "/login", "/signup"]);
+const publicPaths = new Set(["/", "/contact", "/feedback", "/login", "/privacy", "/signup", "/terms"]);
 
 export function AppShell({ authRequired, children, hasSession }: AppShellProps) {
   const pathname = usePathname();

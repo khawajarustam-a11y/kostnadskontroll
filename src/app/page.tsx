@@ -1,4 +1,5 @@
 import Link from "next/link";
+import PublicFooter from "@/components/PublicFooter";
 import PublicThemePicker from "@/components/PublicThemePicker";
 
 const riskItems = [
@@ -39,6 +40,7 @@ export default function Home() {
           <Link href="#how-it-works">How it works</Link>
           <Link href="#trust">Trust</Link>
           <Link href="/feedback">Feedback</Link>
+          <Link href="/contact">Contact</Link>
           <Link className="public-login" href="/login">
             Log in
           </Link>
@@ -206,6 +208,8 @@ export default function Home() {
           Give feedback
         </Link>
       </section>
+
+      <PublicFooter />
     </div>
   );
 }

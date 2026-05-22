@@ -1,4 +1,5 @@
 import Link from "next/link";
+import PublicFooter from "@/components/PublicFooter";
 import { redirect } from "next/navigation";
 
 type FeedbackPageProps = {
@@ -194,6 +195,8 @@ export default async function FeedbackPage({ searchParams }: FeedbackPageProps) 
           </Link>
         </div>
       </form>
+
+      <PublicFooter />
     </div>
   );
 }
