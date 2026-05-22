@@ -33,7 +33,7 @@ export default function Home() {
     <div className="page public-page">
       <header className="public-header">
         <Link className="public-brand" href="/">
-          DueSentry
+          DueKeeper
         </Link>
         <nav className="public-nav" aria-label="Public navigation">
           <Link href="#how-it-works">How it works</Link>
@@ -51,12 +51,12 @@ export default function Home() {
           <p className="public-eyebrow">New</p>
           <h1>Never miss subscription and contract renewals again.</h1>
           <p>
-            DueSentry helps freelancers and small teams upload contracts, invoices, and emails,
+            DueKeeper helps freelancers and small teams upload contracts, invoices, and emails,
             then shows renewal dates and cancellation deadlines before they surprise you.
           </p>
           <div className="public-hero-actions">
             <Link className="public-primary-cta" href="/login">
-              Try DueSentry
+              Try DueKeeper
             </Link>
             <Link className="public-secondary-cta" href="/feedback">
               Send feedback
@@ -69,10 +69,10 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="public-product-preview" aria-label="DueSentry product preview">
+        <div className="public-product-preview" aria-label="DueKeeper product preview">
           <div className="public-preview-shell">
             <div className="public-preview-top">
-              <strong>DueSentry</strong>
+              <strong>DueKeeper</strong>
               <span>Protected</span>
             </div>
             <div className="public-preview-alert">
@@ -116,7 +116,7 @@ export default function Home() {
           <p className="public-eyebrow">The problem</p>
           <h2>Subscriptions renew quietly. Contracts expire. Cancellation dates get missed.</h2>
           <p>
-            DueSentry is built for people who use many tools and do not want to keep every renewal
+            DueKeeper is built for people who use many tools and do not want to keep every renewal
             date in their head.
           </p>
         </div>
@@ -183,7 +183,7 @@ export default function Home() {
           <p className="public-eyebrow">Trust</p>
           <h2>You stay in control.</h2>
           <p>
-            DueSentry is built around review-first automation, so imported data is checked before it
+            DueKeeper is built around review-first automation, so imported data is checked before it
             becomes part of your account.
           </p>
         </div>
@@ -200,7 +200,7 @@ export default function Home() {
         <div>
           <p className="public-eyebrow">Feedback</p>
           <h2>Trying it? Tell us what feels confusing, useful, or missing.</h2>
-          <p>DueSentry is new. Your feedback helps shape what we build next.</p>
+          <p>DueKeeper is new. Your feedback helps shape what we build next.</p>
         </div>
         <Link className="public-primary-cta" href="/feedback">
           Give feedback

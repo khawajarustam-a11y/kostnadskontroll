@@ -22,7 +22,7 @@ export function AppShell({ authRequired, children, hasSession }: AppShellProps) 
   return (
     <div className="app-shell">
       <aside className="app-nav">
-        <div className="brand">DueSentry</div>
+        <div className="brand">DueKeeper</div>
         <AppNav hasSession={hasSession} authRequired={authRequired} />
       </aside>
       <main className="app-main">{children}</main>

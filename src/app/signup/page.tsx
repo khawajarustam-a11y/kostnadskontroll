@@ -80,7 +80,7 @@ export default async function Page({
   return (
     <div className="page auth-page">
       <div className="page-header">
-        <p className="eyebrow">DueSentry</p>
+        <p className="eyebrow">DueKeeper</p>
         <h1 className="page-title">Create your account</h1>
         <p className="muted">Start with a private empty workspace. Your data is separate from every other user.</p>
       </div>

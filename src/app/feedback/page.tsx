@@ -60,9 +60,9 @@ async function sendFeedbackEmail(formData: FormData) {
       from: fromEmail,
       to: [toEmail],
       reply_to: email,
-      subject: "New DueSentry feedback",
+      subject: "New DueKeeper feedback",
       html: `
-        <h2>New DueSentry feedback</h2>
+        <h2>New DueKeeper feedback</h2>
         <p><strong>Name:</strong> ${safeName}</p>
         <p><strong>Email:</strong> ${safeEmail}</p>
         <p><strong>Role:</strong> ${safeRole}</p>
@@ -71,7 +71,7 @@ async function sendFeedbackEmail(formData: FormData) {
         <p>${safeMessage}</p>
       `,
       text: [
-        "New DueSentry feedback",
+        "New DueKeeper feedback",
         `Name: ${name || "Anonymous"}`,
         `Email: ${email}`,
         `Role: ${role || "Not provided"}`,
@@ -97,12 +97,12 @@ export default async function FeedbackPage({ searchParams }: FeedbackPageProps) 
     <div className="page public-page">
       <div className="page-header">
         <p className="eyebrow">Feedback</p>
-        <h1 className="page-title">Help shape DueSentry</h1>
+        <h1 className="page-title">Help shape DueKeeper</h1>
         <p className="page-hero">
           Tell us what would make this useful enough for you to trust it with your renewals.
         </p>
         <p className="feedback-intro">
-          DueSentry is new. Your feedback helps shape what we build next.
+          DueKeeper is new. Your feedback helps shape what we build next.
         </p>
       </div>
 
