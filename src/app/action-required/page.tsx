@@ -27,18 +27,11 @@ export default async function Page() {
   const companyId = await requireCompanyId();
 
   return withRequestContext({ route: "/action-required", companyId }, async () => {
-    const settings = await withTiming("action_required.settings", () =>
+    const settingsPromise = withTiming("action_required.settings", () =>
       getSettingsCached(companyId)
     );
-    const { t, language } = getTranslations(settings?.language);
-    const baseCurrency: Currency = settings?.baseCurrency ?? "USD";
-    const displayCurrency: Currency = settings?.displayCurrency ?? "USD";
-    const locale = language === "NO" ? "nb-NO" : "en-US";
-    const defaultAlertDays = settings?.defaultAlertDays ?? 30;
-    const now = new Date();
-    const usdRates = await getUsdRates();
-
-    const contracts = await withTiming("action_required.contracts", () =>
+    const usdRatesPromise = withTiming("action_required.usd_rates", () => getUsdRates());
+    const contractsPromise = withTiming("action_required.contracts", () =>
       prisma.contract.findMany({
         where: { companyId, deletedAt: null },
         orderBy: [{ cancelByDate: "asc" }, { renewalDate: "asc" }, { endDate: "asc" }],
@@ -55,6 +48,18 @@ export default async function Page() {
         },
       })
     );
+
+    const [settings, usdRates, contracts] = await Promise.all([
+      settingsPromise,
+      usdRatesPromise,
+      contractsPromise,
+    ]);
+    const { t, language } = getTranslations(settings?.language);
+    const baseCurrency: Currency = settings?.baseCurrency ?? "USD";
+    const displayCurrency: Currency = settings?.displayCurrency ?? "USD";
+    const locale = language === "NO" ? "nb-NO" : "en-US";
+    const defaultAlertDays = settings?.defaultAlertDays ?? 30;
+    const now = new Date();
 
     const riskItems = contracts
       .map((contract) => ({

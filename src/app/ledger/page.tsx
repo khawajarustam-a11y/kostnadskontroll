@@ -92,19 +92,11 @@ export default async function Page({
 }) {
   const companyId = await requireCompanyId();
   return withRequestContext({ route: "/ledger", companyId }, async () => {
-  const settings = await withTiming("ledger.settings", () =>
+  const settingsPromise = withTiming("ledger.settings", () =>
     getSettingsCached(companyId)
   );
-  const { t, language } = getTranslations(settings?.language);
-  const locale = language === "NO" ? "nb-NO" : "en-US";
-  const { view } = searchParams ? await searchParams : {};
-  const showDeleted = view === "deleted";
-  const displayCurrency: Currency = settings?.displayCurrency === "NOK" ? "USD" : settings?.displayCurrency ?? "USD";
-  const addEntryLabel = t("addEntry") || (language === "NO" ? "Legg til" : "Add entry");
-  const exportLabel = t("exportCsv") || "Export CSV";
-  const usdRates = await getUsdRates();
-
-  const [entries, deletedEntries] = await withTiming("ledger.list_data", () =>
+  const usdRatesPromise = withTiming("ledger.usd_rates", () => getUsdRates());
+  const listDataPromise = withTiming("ledger.list_data", () =>
     Promise.all([
       prisma.ledgerEntry.findMany({
         where: { companyId, deletedAt: null },
@@ -136,6 +128,18 @@ export default async function Page({
       }),
     ])
   );
+  const { view } = searchParams ? await searchParams : {};
+  const [settings, usdRates, [entries, deletedEntries]] = await Promise.all([
+    settingsPromise,
+    usdRatesPromise,
+    listDataPromise,
+  ]);
+  const { t, language } = getTranslations(settings?.language);
+  const locale = language === "NO" ? "nb-NO" : "en-US";
+  const showDeleted = view === "deleted";
+  const displayCurrency: Currency = settings?.displayCurrency === "NOK" ? "USD" : settings?.displayCurrency ?? "USD";
+  const addEntryLabel = t("addEntry") || (language === "NO" ? "Legg til" : "Add entry");
+  const exportLabel = t("exportCsv") || "Export CSV";
 
   const incomeTotal = entries
     .filter((entry) => entry.type === "INCOME")

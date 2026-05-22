@@ -96,7 +96,6 @@ export default async function Page({
 
       <ContractQuickForm
         action={createContract}
-        defaultCurrency={settings?.displayCurrency ?? "USD"}
         defaultAlertDays={settings?.defaultAlertDays ?? 30}
         labels={{
           title: t("quickAddContract"),
@@ -109,8 +108,6 @@ export default async function Page({
           custom: t("templateCustom"),
           name: t("name"),
           supplier: t("supplier"),
-          pricePerMonth: t("pricePerMonth"),
-          currency: t("currency"),
           startDate: t("startDate"),
           endDate: t("endDate"),
           renewalDate: t("renewalDate"),

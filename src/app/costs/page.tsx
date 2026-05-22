@@ -147,23 +147,11 @@ export default async function Page({
 }) {
   const companyId = await requireCompanyId();
   return withRequestContext({ route: "/costs", companyId }, async () => {
-  const settings = await withTiming("costs.settings", () =>
+  const settingsPromise = withTiming("costs.settings", () =>
     getSettingsCached(companyId)
   );
-  const { t, language } = getTranslations(settings?.language);
-  const baseCurrency: Currency = settings?.baseCurrency ?? "USD";
-  const displayCurrency: Currency = settings?.displayCurrency === "NOK" ? "USD" : settings?.displayCurrency ?? "USD";
-  const locale = language === "NO" ? "nb-NO" : "en-US";
-  const { error, view, filter, sort } = searchParams ? await searchParams : {};
-  const errorMessage = error === "invalid_cost" ? t("errorInvalidCost") : null;
-  const addCostLabel =
-    t("addCost") || (language === "NO" ? "Legg til kostnad" : "Add cost");
-  const confirmDelete = t("confirmDelete");
-  const confirmDeleteForever = t("confirmDeleteForever");
-
-  const usdRates = await getUsdRates();
-
-  const [costs, deletedCosts] = await withTiming("costs.list_data", () =>
+  const usdRatesPromise = withTiming("costs.usd_rates", () => getUsdRates());
+  const listDataPromise = withTiming("costs.list_data", () =>
     Promise.all([
       prisma.cost.findMany({
         where: { companyId, deletedAt: null },
@@ -194,6 +182,21 @@ export default async function Page({
       }),
     ])
   );
+  const { error, view, filter, sort } = searchParams ? await searchParams : {};
+  const [settings, usdRates, [costs, deletedCosts]] = await Promise.all([
+    settingsPromise,
+    usdRatesPromise,
+    listDataPromise,
+  ]);
+  const { t, language } = getTranslations(settings?.language);
+  const baseCurrency: Currency = settings?.baseCurrency ?? "USD";
+  const displayCurrency: Currency = settings?.displayCurrency === "NOK" ? "USD" : settings?.displayCurrency ?? "USD";
+  const locale = language === "NO" ? "nb-NO" : "en-US";
+  const errorMessage = error === "invalid_cost" ? t("errorInvalidCost") : null;
+  const addCostLabel =
+    t("addCost") || (language === "NO" ? "Legg til kostnad" : "Add cost");
+  const confirmDelete = t("confirmDelete");
+  const confirmDeleteForever = t("confirmDeleteForever");
   const showDeleted = view === "deleted";
   const selectedFilter = filter ?? "ALL";
   const selectedSort = sort ?? "next_payment";

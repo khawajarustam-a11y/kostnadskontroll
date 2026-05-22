@@ -14,18 +14,11 @@ export default async function Page() {
   const companyId = await requireCompanyId();
 
   return withRequestContext({ route: "/dashboard", companyId }, async () => {
-    const settings = await withTiming("dashboard.settings", () =>
+    const settingsPromise = withTiming("dashboard.settings", () =>
       getSettingsCached(companyId)
     );
-    const { t, language } = getTranslations(settings?.language);
-    const baseCurrency: Currency = settings?.baseCurrency ?? "USD";
-    const displayCurrency: Currency = settings?.displayCurrency ?? "USD";
-    const locale = language === "NO" ? "nb-NO" : "en-US";
-    const defaultAlertDays = settings?.defaultAlertDays ?? 30;
-    const now = new Date();
-    const usdRates = await getUsdRates();
-
-    const [costs, contracts, ledgerEntries] = await withTiming("dashboard.summary_data", () =>
+    const usdRatesPromise = withTiming("dashboard.usd_rates", () => getUsdRates());
+    const summaryDataPromise = withTiming("dashboard.summary_data", () =>
       Promise.all([
         prisma.cost.findMany({
           where: { companyId, deletedAt: null },
@@ -61,6 +54,18 @@ export default async function Page() {
         }),
       ])
     );
+
+    const [settings, usdRates, [costs, contracts, ledgerEntries]] = await Promise.all([
+      settingsPromise,
+      usdRatesPromise,
+      summaryDataPromise,
+    ]);
+    const { t, language } = getTranslations(settings?.language);
+    const baseCurrency: Currency = settings?.baseCurrency ?? "USD";
+    const displayCurrency: Currency = settings?.displayCurrency ?? "USD";
+    const locale = language === "NO" ? "nb-NO" : "en-US";
+    const defaultAlertDays = settings?.defaultAlertDays ?? 30;
+    const now = new Date();
 
     const monthlyTotal = costs
       .filter((cost) => cost.isActive)

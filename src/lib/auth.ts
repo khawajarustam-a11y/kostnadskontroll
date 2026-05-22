@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { SignJWT, jwtVerify } from "jose";
+import { cache } from "react";
 
 export type SessionPayload = {
   userId: string;
@@ -40,7 +41,7 @@ export async function createSession(payload: SessionPayload) {
   });
 }
 
-export async function getSession(): Promise<SessionPayload | null> {
+export const getSession = cache(async (): Promise<SessionPayload | null> => {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;
   if (!token) {
@@ -52,7 +53,7 @@ export async function getSession(): Promise<SessionPayload | null> {
   } catch {
     return null;
   }
-}
+});
 
 export async function clearSession() {
   const store = await cookies();
@@ -76,4 +77,3 @@ export async function requireSession(): Promise<SessionPayload> {
 export function isAuthRequired(): boolean {
   return AUTH_REQUIRED;
 }
-

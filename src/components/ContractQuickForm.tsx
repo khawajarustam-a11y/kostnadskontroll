@@ -1,6 +1,5 @@
 "use client";
 
-import { Currency } from "@prisma/client";
 import { useMemo, useState } from "react";
 
 type TemplateKey = "monthly" | "annual" | "domain" | "insurance" | "custom";
@@ -16,8 +15,6 @@ type Labels = {
   custom: string;
   name: string;
   supplier: string;
-  pricePerMonth: string;
-  currency: string;
   startDate: string;
   endDate: string;
   renewalDate: string;
@@ -31,7 +28,6 @@ type Labels = {
 
 type Props = {
   action: (formData: FormData) => void | Promise<void>;
-  defaultCurrency: Currency;
   defaultAlertDays: number;
   labels: Labels;
 };
@@ -106,13 +102,11 @@ function templateDates(template: TemplateKey) {
 
 export default function ContractQuickForm({
   action,
-  defaultCurrency,
   defaultAlertDays,
   labels,
 }: Props) {
   const [template, setTemplate] = useState<TemplateKey>("monthly");
   const dates = useMemo(() => templateDates(template), [template]);
-  const visibleDefaultCurrency = defaultCurrency === "NOK" ? "USD" : defaultCurrency;
 
   return (
     <div className="panel quick-add-panel">
@@ -186,22 +180,6 @@ export default function ContractQuickForm({
             <label className="field-label">
               <span>{labels.supplier}</span>
               <input name="supplier" />
-            </label>
-            <label className="field-label">
-              <span>{labels.pricePerMonth}</span>
-              <input
-                name="pricePerMonth"
-                type="number"
-                min="0"
-                step="0.01"
-              />
-            </label>
-            <label className="field-label">
-              <span>{labels.currency}</span>
-              <select name="currency" defaultValue={visibleDefaultCurrency}>
-                <option value="USD">USD</option>
-                <option value="EUR">EUR</option>
-              </select>
             </label>
             <label className="field-label">
               <span>{labels.alertDays}</span>

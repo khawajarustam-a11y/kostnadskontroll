@@ -7,7 +7,6 @@ import { revalidatePath } from "next/cache";
 import Link from "next/link";
 import { withRequestContext, withTiming } from "@/lib/observability";
 import { getSettingsCached } from "@/lib/cached-data";
-import { formatCurrency } from "@/lib/currency";
 
 export const runtime = "nodejs";
 
@@ -88,24 +87,10 @@ export default async function Page({
 }) {
   const companyId = await requireCompanyId();
   return withRequestContext({ route: "/contracts", companyId }, async () => {
-  const settings = await withTiming("contracts.settings", () =>
+  const settingsPromise = withTiming("contracts.settings", () =>
     getSettingsCached(companyId)
   );
-  const { t, language } = getTranslations(settings?.language);
-  const locale = language === "NO" ? "nb-NO" : "en-US";
-  const defaultAlertDays = settings?.defaultAlertDays ?? 30;
-  const { error, view } = searchParams ? await searchParams : {};
-  const showDeleted = view === "deleted";
-  const errorMessage =
-    error === "invalid_date_range"
-      ? t("errorInvalidDateRange")
-      : error === "invalid_contract"
-        ? t("errorInvalidContract")
-        : null;
-  const confirmDelete = t("confirmDelete");
-  const confirmDeleteForever = t("confirmDeleteForever");
-
-  const [contracts, deletedContracts] = await withTiming("contracts.list_data", () =>
+  const listDataPromise = withTiming("contracts.list_data", () =>
     Promise.all([
       prisma.contract.findMany({
         where: { companyId, deletedAt: null },
@@ -142,6 +127,23 @@ export default async function Page({
       }),
     ])
   );
+  const { error, view } = searchParams ? await searchParams : {};
+  const [settings, [contracts, deletedContracts]] = await Promise.all([
+    settingsPromise,
+    listDataPromise,
+  ]);
+  const { t, language } = getTranslations(settings?.language);
+  const locale = language === "NO" ? "nb-NO" : "en-US";
+  const defaultAlertDays = settings?.defaultAlertDays ?? 30;
+  const showDeleted = view === "deleted";
+  const errorMessage =
+    error === "invalid_date_range"
+      ? t("errorInvalidDateRange")
+      : error === "invalid_contract"
+        ? t("errorInvalidContract")
+        : null;
+  const confirmDelete = t("confirmDelete");
+  const confirmDeleteForever = t("confirmDeleteForever");
 
   const now = new Date();
   const contractsWithComputedStatus = contracts.map((contract) => {
@@ -219,7 +221,6 @@ export default async function Page({
                 <tr>
                   <th>{t("name")}</th>
                   <th>{t("supplier")}</th>
-                  <th className="num">{t("amount")}</th>
                   <th>{t("status")}</th>
                   <th>{t("importantDates")}</th>
                   <th>{t("actions")}</th>
@@ -266,11 +267,6 @@ export default async function Page({
                         </div>
                       </td>
                       <td className="muted">{contract.supplier ?? "-"}</td>
-                      <td className="num">
-                        {contract.pricePerMonth && contract.currency
-                          ? formatCurrency(Number(contract.pricePerMonth), contract.currency, locale)
-                          : "-"}
-                      </td>
                       <td>
                         <span className={`status-pill ${getStatusClass(computedStatus)}`}>
                           {computedStatus}
@@ -357,7 +353,6 @@ export default async function Page({
               <tr>
                 <th>{t("name")}</th>
                 <th>{t("supplier")}</th>
-                <th className="num">{t("amount")}</th>
                 <th>{t("status")}</th>
                 <th>{t("importantDates")}</th>
                 <th>{t("actions")}</th>
@@ -375,11 +370,6 @@ export default async function Page({
                     </div>
                   </td>
                   <td className="muted">{contract.supplier ?? "-"}</td>
-                  <td className="num">
-                    {contract.pricePerMonth && contract.currency
-                      ? formatCurrency(Number(contract.pricePerMonth), contract.currency, locale)
-                      : "-"}
-                  </td>
                   <td>
                     <span className={`status-pill ${getStatusClass(contract.status)}`}>{contract.status}</span>
                   </td>
