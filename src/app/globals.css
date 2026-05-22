@@ -2286,7 +2286,6 @@ button.ghost {
 .public-feature-band,
 .public-automation-panel,
 .public-trust-redesign,
-.public-pricing-panel,
 .public-feedback-redesign {
   margin-top: 28px;
   border: 1px solid #e2e8f0;
@@ -2305,7 +2304,6 @@ button.ghost {
 .public-feature-copy h2,
 .public-automation-panel h2,
 .public-trust-redesign h2,
-.public-pricing-panel h2,
 .public-feedback-redesign h2 {
   margin: 12px 0;
   color: #111827;
@@ -2317,7 +2315,6 @@ button.ghost {
 .public-feature-copy p,
 .public-automation-panel p,
 .public-trust-redesign p,
-.public-pricing-panel p,
 .public-feedback-redesign p {
   color: #64748b;
   line-height: 1.65;
@@ -2411,7 +2408,6 @@ button.ghost {
   color: #111827;
 }
 
-.public-pricing-panel,
 .public-feedback-redesign {
   display: flex;
   align-items: center;
@@ -2489,7 +2485,6 @@ button.ghost {
 [data-theme="dark"] .public-feature-band,
 [data-theme="dark"] .public-automation-panel,
 [data-theme="dark"] .public-trust-redesign,
-[data-theme="dark"] .public-pricing-panel,
 [data-theme="dark"] .public-feedback-redesign,
 [data-theme="dark"] .public-workflow-card {
   background: #111827;
@@ -2555,7 +2550,6 @@ button.ghost {
     grid-template-columns: 1fr;
   }
 
-  .public-pricing-panel,
   .public-feedback-redesign {
     flex-direction: column;
     align-items: flex-start;

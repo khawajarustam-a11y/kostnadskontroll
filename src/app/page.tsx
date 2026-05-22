@@ -2,9 +2,9 @@ import Link from "next/link";
 import PublicThemePicker from "@/components/PublicThemePicker";
 
 const riskItems = [
-  { name: "Canva Pro", detail: "Renews in 8 days", amount: "$119.99", tone: "warning" },
-  { name: "Figma", detail: "Cancel by May 24", amount: "$15.00", tone: "danger" },
-  { name: "Adobe Creative Cloud", detail: "Protected", amount: "$59.00", tone: "safe" },
+  { name: "Canva Pro", detail: "Renews in 8 days", status: "Review", tone: "warning" },
+  { name: "Figma", detail: "Cancel by May 24", status: "Urgent", tone: "danger" },
+  { name: "Adobe Creative Cloud", detail: "Protected", status: "Safe", tone: "safe" },
 ] as const;
 
 const workflow = [
@@ -14,7 +14,7 @@ const workflow = [
   },
   {
     title: "Review what AI found",
-    text: "Check the vendor, price, renewal date, and cancellation deadline before anything is saved.",
+    text: "Check the vendor, renewal date, and cancellation deadline before anything is saved.",
   },
   {
     title: "Get reminded",
@@ -38,7 +38,6 @@ export default function Home() {
         <nav className="public-nav" aria-label="Public navigation">
           <Link href="#how-it-works">How it works</Link>
           <Link href="#trust">Trust</Link>
-          <Link href="#pricing">Pricing</Link>
           <Link href="/feedback">Feedback</Link>
           <Link className="public-login" href="/login">
             Log in
@@ -53,8 +52,7 @@ export default function Home() {
           <h1>Never miss subscription and contract renewals again.</h1>
           <p>
             DueSentry helps freelancers and small teams upload contracts, invoices, and emails,
-            then shows renewal dates, cancellation deadlines, and possible charges before they
-            surprise you.
+            then shows renewal dates and cancellation deadlines before they surprise you.
           </p>
           <div className="public-hero-actions">
             <Link className="public-primary-cta" href="/login">
@@ -79,10 +77,10 @@ export default function Home() {
             </div>
             <div className="public-preview-alert">
               <div>
-                <span>Possible charge detected</span>
+                <span>Renewal detected</span>
                 <strong>Canva Pro renews in 8 days</strong>
               </div>
-              <b>$119.99</b>
+              <b>Review</b>
             </div>
             <div className="public-preview-metrics">
               <div>
@@ -94,8 +92,8 @@ export default function Home() {
                 <strong>3</strong>
               </div>
               <div>
-                <span>Monthly risk</span>
-                <strong>$247</strong>
+                <span>Upcoming renewals</span>
+                <strong>5</strong>
               </div>
             </div>
             <div className="public-preview-list">
@@ -105,7 +103,7 @@ export default function Home() {
                     <strong>{item.name}</strong>
                     <span>{item.detail}</span>
                   </div>
-                  <b>{item.amount}</b>
+                  <b>{item.status}</b>
                 </div>
               ))}
             </div>
@@ -126,12 +124,12 @@ export default function Home() {
           <div className="public-risk-card">
             <span>01</span>
             <strong>Forgotten renewals</strong>
-            <p>Know what can charge you next before money leaves the account.</p>
+            <p>Know what can renew next before important deadlines sneak up.</p>
           </div>
           <div className="public-risk-card">
             <span>02</span>
-            <strong>Silent price changes</strong>
-            <p>Keep vendor, amount, and renewal details visible in one place.</p>
+            <strong>Silent contract changes</strong>
+            <p>Keep vendor and renewal details visible in one place.</p>
           </div>
           <div className="public-risk-card">
             <span>03</span>
@@ -196,20 +194,6 @@ export default function Home() {
             </div>
           ))}
         </div>
-      </section>
-
-      <section id="pricing" className="public-pricing-panel">
-        <div>
-          <p className="public-eyebrow">Pricing</p>
-          <h2>Free to try while we learn. Pricing comes later.</h2>
-          <p>
-            We are learning from early users first. Paid plans will be introduced later with clear
-            limits before anything changes.
-          </p>
-        </div>
-        <Link className="public-secondary-cta" href="/login">
-          Start free
-        </Link>
       </section>
 
       <section className="public-feedback-strip public-feedback-redesign">
