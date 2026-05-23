@@ -24,6 +24,7 @@ const mainItems: NavItem[] = [
 
 const toolItems: NavItem[] = [
   { href: "/import", label: "Import", marker: "+" },
+  { href: "/feedback-inbox", label: "Feedback", marker: "F" },
   { href: "/settings", label: "Settings", marker: "S" },
 ];
 

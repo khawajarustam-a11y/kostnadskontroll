@@ -46,6 +46,20 @@ model Company {
   @@index([deletedAt])
 }
 
+model FeedbackMessage {
+  id        String   @id @default(cuid())
+  name      String?
+  email     String
+  role      String?
+  interest  String?
+  message   String
+  emailedAt DateTime?
+  emailError String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
 model Settings {
   id               String   @id @default(cuid())
   companyId        String   @unique

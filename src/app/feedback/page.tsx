@@ -1,6 +1,7 @@
 import Link from "next/link";
 import PublicFooter from "@/components/PublicFooter";
 import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
 
 type FeedbackPageProps = {
   searchParams?: Promise<{ status?: string }>;
@@ -37,12 +38,26 @@ async function sendFeedbackEmail(formData: FormData) {
     redirect("/feedback?status=invalid");
   }
 
+  const feedback = await prisma.feedbackMessage.create({
+    data: {
+      name: name || null,
+      email,
+      role: role || null,
+      interest: interest || null,
+      message,
+    },
+  });
+
   const apiKey = process.env.RESEND_API_KEY;
   const fromEmail = process.env.REMINDER_FROM_EMAIL;
   const toEmail = process.env.FEEDBACK_TO_EMAIL ?? process.env.REMINDER_FROM_EMAIL;
 
   if (!apiKey || !fromEmail || !toEmail) {
-    redirect("/feedback?status=not_configured");
+    await prisma.feedbackMessage.update({
+      where: { id: feedback.id },
+      data: { emailError: "Email is not configured." },
+    });
+    redirect("/feedback?status=saved");
   }
 
   const safeName = escapeHtml(name || "Anonymous");
@@ -84,8 +99,18 @@ async function sendFeedbackEmail(formData: FormData) {
   });
 
   if (!response.ok) {
-    redirect("/feedback?status=failed");
+    const errorText = await response.text().catch(() => "Unknown email error");
+    await prisma.feedbackMessage.update({
+      where: { id: feedback.id },
+      data: { emailError: errorText.slice(0, 500) },
+    });
+    redirect("/feedback?status=saved");
   }
+
+  await prisma.feedbackMessage.update({
+    where: { id: feedback.id },
+    data: { emailedAt: new Date(), emailError: null },
+  });
 
   redirect("/feedback?status=sent");
 }
@@ -111,6 +136,13 @@ export default async function FeedbackPage({ searchParams }: FeedbackPageProps) 
         <div className="feedback-status feedback-status-success">
           <strong>Thank you. Your feedback was sent.</strong>
           <span>That kind of early feedback is exactly what makes the product better.</span>
+        </div>
+      ) : null}
+
+      {status === "saved" ? (
+        <div className="feedback-status feedback-status-success">
+          <strong>Thank you. Your feedback was saved.</strong>
+          <span>We have it in the DueKeeper feedback inbox.</span>
         </div>
       ) : null}
 
