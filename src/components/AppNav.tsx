@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 type AppNavProps = {
   hasSession: boolean;
   authRequired: boolean;
+  canViewFeedback: boolean;
 };
 
 type NavItem = {
@@ -24,7 +25,6 @@ const mainItems: NavItem[] = [
 
 const toolItems: NavItem[] = [
   { href: "/import", label: "Import", marker: "+" },
-  { href: "/feedback-inbox", label: "Feedback", marker: "F" },
   { href: "/settings", label: "Settings", marker: "S" },
 ];
 
@@ -48,8 +48,11 @@ function NavLink({ item, pathname }: { item: NavItem; pathname: string }) {
   );
 }
 
-export function AppNav({ hasSession, authRequired }: AppNavProps) {
+export function AppNav({ hasSession, authRequired, canViewFeedback }: AppNavProps) {
   const pathname = usePathname();
+  const visibleToolItems = canViewFeedback
+    ? [...toolItems.slice(0, 1), { href: "/feedback-inbox", label: "Feedback", marker: "F" }, ...toolItems.slice(1)]
+    : toolItems;
 
   if (!hasSession) {
     return (
@@ -69,7 +72,7 @@ export function AppNav({ hasSession, authRequired }: AppNavProps) {
       </div>
       <div className="nav-section">
         <div className="nav-section-label">Tools</div>
-        {toolItems.map((item) => <NavLink key={item.href} item={item} pathname={pathname} />)}
+        {visibleToolItems.map((item) => <NavLink key={item.href} item={item} pathname={pathname} />)}
       </div>
       {authRequired ? (
         <Link className="nav-action" href="/api/logout" prefetch={false}>

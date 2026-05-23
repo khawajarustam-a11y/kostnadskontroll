@@ -3,6 +3,7 @@ import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "@/components/AppShell";
 import { getSession, isAuthRequired } from "@/lib/auth";
+import { isFeedbackAdmin } from "@/lib/admin";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-sans",
@@ -49,11 +50,12 @@ export default async function RootLayout({
 }>) {
   const session = await getSession();
   const authRequired = isAuthRequired();
+  const canViewFeedback = await isFeedbackAdmin(session);
 
   return (
     <html lang="en">
       <body className={`${spaceGrotesk.variable} ${plexMono.variable}`}>
-        <AppShell hasSession={Boolean(session)} authRequired={authRequired}>
+        <AppShell hasSession={Boolean(session)} authRequired={authRequired} canViewFeedback={canViewFeedback}>
           {children}
         </AppShell>
       </body>

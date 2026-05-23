@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
+import { isFeedbackAdmin } from "@/lib/admin";
+import { notFound } from "next/navigation";
 
 export const runtime = "nodejs";
 
@@ -12,7 +14,12 @@ function formatDate(date: Date) {
 }
 
 export default async function FeedbackInboxPage() {
-  await requireSession();
+  const session = await requireSession();
+  const canViewFeedback = await isFeedbackAdmin(session);
+
+  if (!canViewFeedback) {
+    notFound();
+  }
 
   const messages = await prisma.feedbackMessage.findMany({
     orderBy: { createdAt: "desc" },

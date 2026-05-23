@@ -5,13 +5,14 @@ import { AppNav } from "@/components/AppNav";
 
 type AppShellProps = {
   authRequired: boolean;
+  canViewFeedback: boolean;
   children: React.ReactNode;
   hasSession: boolean;
 };
 
 const publicPaths = new Set(["/", "/contact", "/feedback", "/login", "/privacy", "/signup", "/terms"]);
 
-export function AppShell({ authRequired, children, hasSession }: AppShellProps) {
+export function AppShell({ authRequired, canViewFeedback, children, hasSession }: AppShellProps) {
   const pathname = usePathname();
   const isPublicPage = publicPaths.has(pathname);
 
@@ -23,7 +24,7 @@ export function AppShell({ authRequired, children, hasSession }: AppShellProps) 
     <div className="app-shell">
       <aside className="app-nav">
         <div className="brand">DueKeeper</div>
-        <AppNav hasSession={hasSession} authRequired={authRequired} />
+        <AppNav hasSession={hasSession} authRequired={authRequired} canViewFeedback={canViewFeedback} />
       </aside>
       <main className="app-main">{children}</main>
     </div>
