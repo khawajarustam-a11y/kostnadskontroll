@@ -1,7 +1,20 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import PublicFooter from "@/components/PublicFooter";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = {
+  title: "Feedback",
+  description: "Send product feedback to DueKeeper.",
+  alternates: {
+    canonical: "/feedback",
+  },
+  robots: {
+    index: false,
+    follow: true,
+  },
+};
 
 type FeedbackPageProps = {
   searchParams?: Promise<{ status?: string }>;

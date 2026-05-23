@@ -1,6 +1,30 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import PublicFooter from "@/components/PublicFooter";
 import PublicThemePicker from "@/components/PublicThemePicker";
+
+export const metadata: Metadata = {
+  title: "DueKeeper - Subscription and Contract Renewal Tracker",
+  description:
+    "DueKeeper helps freelancers and small teams track subscription renewals, contract deadlines, cancellation dates, costs, and reminders in one workspace.",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "DueKeeper - Subscription and Contract Renewal Tracker",
+    description:
+      "Track subscription renewals, contract deadlines, cancellation dates, costs, and reminders before they surprise you.",
+    url: "/",
+    siteName: "DueKeeper",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "DueKeeper - Subscription and Contract Renewal Tracker",
+    description:
+      "Track subscription renewals, contract deadlines, cancellation dates, costs, and reminders before they surprise you.",
+  },
+};
 
 const riskItems = [
   { name: "Canva Pro", detail: "Renews in 8 days", status: "Review", tone: "warning" },
@@ -29,9 +53,24 @@ const trustItems = [
   "Connected inbox scanning is optional and stays under your control.",
 ] as const;
 
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "DueKeeper",
+  applicationCategory: "BusinessApplication",
+  operatingSystem: "Web",
+  url: "https://duekeeper.com",
+  description:
+    "DueKeeper helps freelancers and small teams track subscription renewals, contract deadlines, cancellation dates, costs, and reminders in one workspace.",
+};
+
 export default function Home() {
   return (
     <div className="page public-page">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       <header className="public-header">
         <Link className="public-brand" href="/">
           DueKeeper
