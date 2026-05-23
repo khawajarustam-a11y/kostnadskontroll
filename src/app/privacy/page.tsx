@@ -3,8 +3,11 @@ import Link from "next/link";
 import PublicFooter from "@/components/PublicFooter";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | DueKeeper",
+  title: "Privacy Policy",
   description: "How DueKeeper handles account, contract, cost, import, and feedback data.",
+  alternates: {
+    canonical: "/privacy",
+  },
 };
 
 const lastUpdated = "May 23, 2026";

@@ -3,8 +3,11 @@ import Link from "next/link";
 import PublicFooter from "@/components/PublicFooter";
 
 export const metadata: Metadata = {
-  title: "Contact | DueKeeper",
+  title: "Contact",
   description: "Contact DueKeeper for feedback, support, privacy, or product questions.",
+  alternates: {
+    canonical: "/contact",
+  },
 };
 
 export default function ContactPage() {

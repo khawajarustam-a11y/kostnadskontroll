@@ -3,8 +3,11 @@ import Link from "next/link";
 import PublicFooter from "@/components/PublicFooter";
 
 export const metadata: Metadata = {
-  title: "Terms of Service | DueKeeper",
+  title: "Terms of Service",
   description: "The basic terms for using DueKeeper.",
+  alternates: {
+    canonical: "/terms",
+  },
 };
 
 const lastUpdated = "May 23, 2026";
