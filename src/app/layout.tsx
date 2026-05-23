@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "@/components/AppShell";
-import { getSession, isAuthRequired } from "@/lib/auth";
+import { getActiveSession, isAuthRequired } from "@/lib/auth";
 import { isFeedbackAdmin } from "@/lib/admin";
 
 const spaceGrotesk = Space_Grotesk({
@@ -48,7 +48,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await getSession();
+  const session = await getActiveSession();
   const authRequired = isAuthRequired();
   const canViewFeedback = await isFeedbackAdmin(session);
 

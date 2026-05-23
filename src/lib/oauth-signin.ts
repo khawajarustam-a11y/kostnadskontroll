@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { createSession } from "@/lib/auth";
 
@@ -31,29 +32,47 @@ export async function signInWithVerifiedEmail(profile: OAuthProfile) {
   const passwordHash = await bcrypt.hash(crypto.randomUUID(), 12);
   const workspaceName = name ? `${name}'s workspace` : `${email.split("@")[0]}'s workspace`;
 
-  const user = await prisma.$transaction(async (tx) => {
-    const company = await tx.company.create({
-      data: {
-        name: workspaceName,
-        timezone: "Europe/Oslo",
-        settings: {
-          create: {
-            language: "EN",
-            displayCurrency: "USD",
-            baseCurrency: "USD",
-            defaultAlertDays: 30,
+  try {
+    const user = await prisma.$transaction(async (tx) => {
+      const company = await tx.company.create({
+        data: {
+          name: workspaceName,
+          timezone: "Europe/Oslo",
+          settings: {
+            create: {
+              language: "EN",
+              displayCurrency: "USD",
+              baseCurrency: "USD",
+              defaultAlertDays: 30,
+            },
           },
         },
-      },
-      select: { id: true },
+        select: { id: true },
+      });
+
+      return tx.user.create({
+        data: { email, name, passwordHash, companyId: company.id },
+        select: { id: true, companyId: true },
+      });
     });
 
-    return tx.user.create({
-      data: { email, name, passwordHash, companyId: company.id },
-      select: { id: true, companyId: true },
-    });
-  });
+    await createSession({ userId: user.id, companyId: user.companyId });
+    return { ok: true as const };
+  } catch (error) {
+    if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2002") {
+      throw error;
+    }
 
-  await createSession({ userId: user.id, companyId: user.companyId });
-  return { ok: true as const };
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: { company: { select: { deletedAt: true } } },
+    });
+
+    if (!user || user.deletedAt || user.company.deletedAt) {
+      return { ok: false as const };
+    }
+
+    await createSession({ userId: user.id, companyId: user.companyId });
+    return { ok: true as const };
+  }
 }

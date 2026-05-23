@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { createSession, getSession, isAuthRequired } from "@/lib/auth";
+import { createSession, getActiveSession, isAuthRequired } from "@/lib/auth";
 import { getTranslations } from "@/lib/i18n";
 import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
@@ -33,7 +33,7 @@ export default async function Page({
   searchParams?: Promise<{ error?: string }>;
 }) {
   if (!isAuthRequired()) redirect("/select-company");
-  const session = await getSession();
+  const session = await getActiveSession();
   if (session) redirect("/dashboard");
 
   const defaultLanguage = process.env.DEFAULT_LANGUAGE === "NO" ? "NO" : "EN";

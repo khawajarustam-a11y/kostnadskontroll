@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { SignJWT, jwtVerify } from "jose";
 import { cache } from "react";
+import { prisma } from "@/lib/prisma";
 
 export type SessionPayload = {
   userId: string;
@@ -55,6 +56,25 @@ export const getSession = cache(async (): Promise<SessionPayload | null> => {
   }
 });
 
+export const getActiveSession = cache(async (): Promise<SessionPayload | null> => {
+  const session = await getSession();
+  if (!session) {
+    return null;
+  }
+
+  const user = await prisma.user.findFirst({
+    where: {
+      id: session.userId,
+      companyId: session.companyId,
+      deletedAt: null,
+      company: { deletedAt: null },
+    },
+    select: { id: true },
+  });
+
+  return user ? session : null;
+});
+
 export async function clearSession() {
   const store = await cookies();
   store.set(SESSION_COOKIE, "", {
@@ -67,7 +87,7 @@ export async function clearSession() {
 }
 
 export async function requireSession(): Promise<SessionPayload> {
-  const session = await getSession();
+  const session = await getActiveSession();
   if (!session) {
     redirect("/login");
   }

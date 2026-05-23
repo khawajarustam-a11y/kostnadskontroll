@@ -1,7 +1,8 @@
 import Link from "next/link";
 import bcrypt from "bcryptjs";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { createSession, getSession, isAuthRequired } from "@/lib/auth";
+import { createSession, getActiveSession, isAuthRequired } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
 export const runtime = "nodejs";
@@ -31,28 +32,36 @@ async function signUp(formData: FormData) {
   const passwordHash = await bcrypt.hash(password, 12);
   const workspaceName = name ? `${name}'s workspace` : `${email.split("@")[0]}'s workspace`;
 
-  const user = await prisma.$transaction(async (tx) => {
-    const company = await tx.company.create({
-      data: {
-        name: workspaceName,
-        timezone: "Europe/Oslo",
-        settings: {
-          create: {
-            language: "EN",
-            displayCurrency: "USD",
-            baseCurrency: "USD",
-            defaultAlertDays: 30,
+  let user: { id: string; companyId: string };
+  try {
+    user = await prisma.$transaction(async (tx) => {
+      const company = await tx.company.create({
+        data: {
+          name: workspaceName,
+          timezone: "Europe/Oslo",
+          settings: {
+            create: {
+              language: "EN",
+              displayCurrency: "USD",
+              baseCurrency: "USD",
+              defaultAlertDays: 30,
+            },
           },
         },
-      },
-      select: { id: true },
-    });
+        select: { id: true },
+      });
 
-    return tx.user.create({
-      data: { email, name, passwordHash, companyId: company.id },
-      select: { id: true, companyId: true },
+      return tx.user.create({
+        data: { email, name, passwordHash, companyId: company.id },
+        select: { id: true, companyId: true },
+      });
     });
-  });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      redirect("/signup?error=email_exists");
+    }
+    throw error;
+  }
 
   await createSession({ userId: user.id, companyId: user.companyId });
   redirect("/dashboard");
@@ -64,7 +73,7 @@ export default async function Page({
   searchParams?: Promise<{ error?: string }>;
 }) {
   if (!isAuthRequired()) redirect("/select-company");
-  const session = await getSession();
+  const session = await getActiveSession();
   if (session) redirect("/dashboard");
 
   const { error } = searchParams ? await searchParams : {};
@@ -74,7 +83,7 @@ export default async function Page({
       : error === "weak_password"
         ? "Use at least 8 characters for your password."
         : error === "email_exists"
-          ? "An account already exists for this email."
+          ? "You already have an account with that email. Please log in instead."
           : error === "oauth_missing_config"
             ? "Social signup is not configured yet."
             : error === "oauth_invalid_state"

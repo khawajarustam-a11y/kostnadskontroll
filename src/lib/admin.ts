@@ -27,8 +27,13 @@ export async function isFeedbackAdmin(session: SessionPayload | null) {
 
   const user = await prisma.user.findUnique({
     where: { id: session.userId },
-    select: { email: true },
+    select: { companyId: true, deletedAt: true, email: true },
   });
 
-  return Boolean(user?.email && adminEmails.has(user.email.toLowerCase()));
+  return Boolean(
+    user?.email &&
+    !user.deletedAt &&
+    user.companyId === session.companyId &&
+    adminEmails.has(user.email.toLowerCase())
+  );
 }

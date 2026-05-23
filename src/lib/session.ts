@@ -1,11 +1,11 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { getSession, isAuthRequired } from "@/lib/auth";
+import { getActiveSession, isAuthRequired } from "@/lib/auth";
 
 export const COMPANY_COOKIE = "kk_company";
 
 export async function getCompanyId(): Promise<string | null> {
-  const session = await getSession();
+  const session = await getActiveSession();
   if (session) {
     return session.companyId;
   }
@@ -17,7 +17,7 @@ export async function getCompanyId(): Promise<string | null> {
 }
 
 export async function requireCompanyId(): Promise<string> {
-  const session = await getSession();
+  const session = await getActiveSession();
   if (session) {
     return session.companyId;
   }
@@ -30,4 +30,3 @@ export async function requireCompanyId(): Promise<string> {
   }
   return companyId;
 }
-
