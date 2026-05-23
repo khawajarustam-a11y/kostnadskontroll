@@ -75,6 +75,14 @@ export default async function Page({
         ? "Use at least 8 characters for your password."
         : error === "email_exists"
           ? "An account already exists for this email."
+          : error === "oauth_missing_config"
+            ? "Social signup is not configured yet."
+            : error === "oauth_invalid_state"
+              ? "Signup expired. Please try again."
+              : error === "oauth_unverified_email"
+                ? "Use an account with a verified email address."
+                : error === "oauth_failed"
+                  ? "Social signup failed. Please try again."
           : null;
 
   return (
@@ -87,6 +95,17 @@ export default async function Page({
 
       <form action={signUp} className="panel auth-card">
         {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
+        <div className="oauth-actions">
+          <Link className="oauth-button" href="/api/auth/google/start">
+            <span className="oauth-mark" aria-hidden="true">G</span>
+            Continue with Google
+          </Link>
+          <Link className="oauth-button" href="/api/auth/github/start">
+            <span className="oauth-mark" aria-hidden="true">GH</span>
+            Continue with GitHub
+          </Link>
+        </div>
+        <div className="auth-divider"><span>or</span></div>
         <label className="stack">
           <span>Name</span>
           <input name="name" type="text" autoComplete="name" placeholder="Your name" />

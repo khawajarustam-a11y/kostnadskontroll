@@ -45,6 +45,14 @@ export default async function Page({
       ? t("errorMissingLogin")
       : error === "invalid_login"
         ? t("errorInvalidLogin")
+        : error === "oauth_missing_config"
+          ? "Social login is not configured yet."
+          : error === "oauth_invalid_state"
+            ? "Login expired. Please try again."
+            : error === "oauth_unverified_email"
+              ? "Use an account with a verified email address."
+              : error === "oauth_failed"
+                ? "Social login failed. Please try again."
         : null;
 
   return (
@@ -56,6 +64,17 @@ export default async function Page({
       </div>
       <form action={login} className="panel auth-card">
         {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
+        <div className="oauth-actions">
+          <Link className="oauth-button" href="/api/auth/google/start">
+            <span className="oauth-mark" aria-hidden="true">G</span>
+            Continue with Google
+          </Link>
+          <Link className="oauth-button" href="/api/auth/github/start">
+            <span className="oauth-mark" aria-hidden="true">GH</span>
+            Continue with GitHub
+          </Link>
+        </div>
+        <div className="auth-divider"><span>or</span></div>
         <label className="stack">
           <span>{t("email")}</span>
           <input name="email" type="email" autoComplete="email" required />
