@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/privacy",
   },
+  robots: {
+    index: false,
+    follow: true,
+  },
 };
 
 const lastUpdated = "May 23, 2026";
