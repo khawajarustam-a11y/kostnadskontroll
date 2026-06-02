@@ -1,10 +1,8 @@
-import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { hashEmailVerificationToken, prepareEmailVerification, sendVerificationEmail } from "@/lib/email-verification";
 import { createSession, getActiveSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 
 export const runtime = "nodejs";
 
