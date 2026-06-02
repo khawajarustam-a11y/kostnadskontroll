@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { createSession, getActiveSession, isAuthRequired } from "@/lib/auth";
+import { prepareEmailVerification, sendVerificationEmail } from "@/lib/email-verification";
 import { redirect } from "next/navigation";
 
 export const runtime = "nodejs";
@@ -32,7 +33,7 @@ async function signUp(formData: FormData) {
   const passwordHash = await bcrypt.hash(password, 12);
   const workspaceName = name ? `${name}'s workspace` : `${email.split("@")[0]}'s workspace`;
 
-  let user: { id: string; companyId: string };
+  let user: { id: string; companyId: string; name: string | null };
   try {
     user = await prisma.$transaction(async (tx) => {
       const company = await tx.company.create({
@@ -53,7 +54,7 @@ async function signUp(formData: FormData) {
 
       return tx.user.create({
         data: { email, name, passwordHash, companyId: company.id },
-        select: { id: true, companyId: true },
+        select: { id: true, companyId: true, name: true },
       });
     });
   } catch (error) {
@@ -63,8 +64,29 @@ async function signUp(formData: FormData) {
     throw error;
   }
 
-  await createSession({ userId: user.id, companyId: user.companyId });
-  redirect("/dashboard");
+  // Send verification email
+  try {
+    const verificationToken = await prepareEmailVerification(user.id);
+    const emailResult = await sendVerificationEmail({
+      email,
+      name,
+      token: verificationToken,
+    });
+
+    if (!emailResult.ok) {
+      console.error("Failed to send verification email:", emailResult.reason);
+      // Still redirect to verification page, but user might not receive email if config is missing
+      if (emailResult.reason === "missing_config") {
+        redirect("/verify-email?error=email_config_missing");
+      }
+    }
+  } catch (error) {
+    console.error("Error during email verification setup:", error);
+    redirect("/verify-email?error=verification_setup_failed");
+  }
+
+  // Redirect to verification pending page
+  redirect("/verify-email?status=check_email");
 }
 
 export default async function Page({

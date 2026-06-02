@@ -19,6 +19,10 @@ export async function getCompanyId(): Promise<string | null> {
 export async function requireCompanyId(): Promise<string> {
   const session = await getActiveSession();
   if (session) {
+    // Check if email is verified for authenticated users
+    if (!session.user.emailVerifiedAt) {
+      redirect("/verify-email?status=check_email");
+    }
     return session.companyId;
   }
   if (isAuthRequired()) {

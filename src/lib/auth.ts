@@ -9,6 +9,13 @@ export type SessionPayload = {
   companyId: string;
 };
 
+export type ActiveSessionData = SessionPayload & {
+  user: {
+    id: string;
+    emailVerifiedAt: Date | null;
+  };
+};
+
 const SESSION_COOKIE = "kk_session";
 const SESSION_MAX_AGE = 60 * 60 * 24 * 7;
 const AUTH_REQUIRED = process.env.AUTH_REQUIRED === "true";
@@ -56,7 +63,7 @@ export const getSession = cache(async (): Promise<SessionPayload | null> => {
   }
 });
 
-export const getActiveSession = cache(async (): Promise<SessionPayload | null> => {
+export const getActiveSession = cache(async (): Promise<ActiveSessionData | null> => {
   const session = await getSession();
   if (!session) {
     return null;
@@ -69,10 +76,10 @@ export const getActiveSession = cache(async (): Promise<SessionPayload | null> =
       deletedAt: null,
       company: { deletedAt: null },
     },
-    select: { id: true },
+    select: { id: true, emailVerifiedAt: true },
   });
 
-  return user ? session : null;
+  return user ? { ...session, user } : null;
 });
 
 export async function clearSession() {

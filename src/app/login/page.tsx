@@ -4,6 +4,7 @@ import { createSession, getActiveSession, isAuthRequired } from "@/lib/auth";
 import { getTranslations } from "@/lib/i18n";
 import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
+import { prepareEmailVerification, sendVerificationEmail } from "@/lib/email-verification";
 
 export const runtime = "nodejs";
 
@@ -22,6 +23,24 @@ async function login(formData: FormData) {
 
   const ok = await bcrypt.compare(password, user.passwordHash);
   if (!ok) redirect("/login?error=invalid_login");
+
+  // Check if email is verified
+  if (!user.emailVerifiedAt) {
+    // Send verification email if not already pending
+    if (!user.emailVerificationTokenHash) {
+      try {
+        const verificationToken = await prepareEmailVerification(user.id);
+        await sendVerificationEmail({
+          email: user.email,
+          name: user.name,
+          token: verificationToken,
+        });
+      } catch (error) {
+        console.error("Error sending verification email during login:", error);
+      }
+    }
+    redirect("/verify-email?status=check_email&email=" + encodeURIComponent(email));
+  }
 
   await createSession({ userId: user.id, companyId: user.companyId });
   redirect("/dashboard");
