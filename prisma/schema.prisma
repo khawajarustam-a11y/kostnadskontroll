@@ -173,6 +173,8 @@ model User {
   emailVerifiedAt   DateTime?
   emailVerificationTokenHash      String?   @unique
   emailVerificationTokenExpiresAt DateTime?
+  passwordResetTokenHash          String?   @unique
+  passwordResetTokenExpiresAt     DateTime?
   companyId         String
   deleteRequestedAt DateTime?
   deleteScheduledAt DateTime?

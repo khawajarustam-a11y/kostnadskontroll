@@ -6,38 +6,54 @@ import { redirect } from "next/navigation";
 
 export const runtime = "nodejs";
 
-async function verifyEmailAction(token: string) {
+function cleanEmail(value: FormDataEntryValue | null) {
+  return String(value ?? "").trim().toLowerCase();
+}
+
+function cleanCode(value: FormDataEntryValue | null) {
+  return String(value ?? "").trim();
+}
+
+async function verifyEmailCode(formData: FormData) {
   "use server";
 
-  if (!token) {
-    redirect("/verify-email?error=missing_token");
+  const email = cleanEmail(formData.get("email"));
+  const code = cleanCode(formData.get("code"));
+
+  if (!email || !code) {
+    redirect("/verify-email?error=missing_data");
   }
 
   try {
-    const tokenHash = hashEmailVerificationToken(token);
-
     const user = await prisma.user.findUnique({
-      where: { emailVerificationTokenHash: tokenHash },
+      where: { email },
       select: {
         id: true,
-        email: true,
-        name: true,
         companyId: true,
+        emailVerificationTokenHash: true,
         emailVerificationTokenExpiresAt: true,
         emailVerifiedAt: true,
       },
     });
 
     if (!user) {
-      redirect("/verify-email?error=invalid_token");
+      redirect("/verify-email?error=invalid_email");
     }
 
     if (user.emailVerifiedAt) {
       redirect("/verify-email?success=already_verified");
     }
 
-    if (!user.emailVerificationTokenExpiresAt || user.emailVerificationTokenExpiresAt < new Date()) {
-      redirect("/verify-email?error=token_expired");
+    if (!user.emailVerificationTokenHash || !user.emailVerificationTokenExpiresAt) {
+      redirect("/verify-email?error=code_not_requested&email=" + encodeURIComponent(email));
+    }
+
+    if (new Date() > user.emailVerificationTokenExpiresAt) {
+      redirect("/verify-email?error=code_expired&email=" + encodeURIComponent(email));
+    }
+
+    if (hashEmailVerificationToken(code) !== user.emailVerificationTokenHash) {
+      redirect("/verify-email?error=invalid_code&email=" + encodeURIComponent(email));
     }
 
     await prisma.user.update({
@@ -53,14 +69,14 @@ async function verifyEmailAction(token: string) {
     redirect("/dashboard");
   } catch (error) {
     console.error("Email verification error:", error);
-    redirect("/verify-email?error=verification_failed");
+    redirect("/verify-email?error=verification_failed&email=" + encodeURIComponent(email));
   }
 }
 
-async function resendVerificationEmail(formData: FormData) {
+async function resendVerificationCode(formData: FormData) {
   "use server";
 
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const email = cleanEmail(formData.get("email"));
 
   if (!email) {
     redirect("/verify-email?error=missing_email");
@@ -71,42 +87,42 @@ async function resendVerificationEmail(formData: FormData) {
       where: { email },
       select: {
         id: true,
-        email: true,
         name: true,
         emailVerifiedAt: true,
       },
     });
 
     if (!user) {
-      redirect("/verify-email?error=email_not_found");
+      redirect("/verify-email?error=invalid_email");
     }
 
     if (user.emailVerifiedAt) {
       redirect("/verify-email?success=already_verified");
     }
 
-    const verificationToken = await prepareEmailVerification(user.id);
+    const verificationCode = await prepareEmailVerification(user.id);
     const emailResult = await sendVerificationEmail({
       email: user.email,
       name: user.name,
-      token: verificationToken,
+      token: verificationCode,
     });
 
     if (!emailResult.ok) {
-      redirect("/verify-email?error=resend_failed");
+      console.error("Failed to resend verification code:", emailResult.reason);
+      redirect("/verify-email?error=resend_failed&email=" + encodeURIComponent(email));
     }
 
-    redirect("/verify-email?success=email_resent");
+    redirect("/verify-email?success=email_resent&email=" + encodeURIComponent(email));
   } catch (error) {
-    console.error("Error resending verification email:", error);
-    redirect("/verify-email?error=resend_failed");
+    console.error("Error resending verification code:", error);
+    redirect("/verify-email?error=resend_failed&email=" + encodeURIComponent(email));
   }
 }
 
 export default async function VerifyEmailPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ token?: string; error?: string; success?: string; status?: string; email?: string }>;
+  searchParams?: Promise<{ error?: string; success?: string; status?: string; email?: string }>;
 }) {
   const session = await getActiveSession();
   if (session?.user.emailVerifiedAt) {
@@ -114,39 +130,36 @@ export default async function VerifyEmailPage({
   }
 
   const params = searchParams ? await searchParams : {};
-  const { token, error, success, status, email: paramEmail } = params;
-
-  // Auto-verify if token is present
-  if (token) {
-    await verifyEmailAction(token);
-  }
+  const { error, success, status, email: paramEmail } = params;
 
   const errorMessage =
-    error === "missing_token"
-      ? "Verification link is missing a token. Please use the link from your email."
-      : error === "invalid_token"
-        ? "This verification link is invalid or has already been used."
-        : error === "token_expired"
-          ? "This verification link has expired. Request a new one below."
-          : error === "verification_failed"
-            ? "Something went wrong during verification. Please try again."
-            : error === "email_config_missing"
-              ? "Email verification is not configured. Please contact support."
-              : error === "verification_setup_failed"
-                ? "Failed to set up email verification. Please try signing up again."
-                : error === "missing_email"
-                  ? "Please enter your email address."
-                  : error === "email_not_found"
-                    ? "No account found with that email."
-                    : error === "resend_failed"
-                      ? "Failed to resend verification email. Please try again."
-                      : null;
+    error === "missing_data"
+      ? "Please enter your email and verification code."
+      : error === "invalid_email"
+        ? "No account was found for that email."
+        : error === "invalid_code"
+          ? "The code is invalid. Please try again."
+          : error === "code_expired"
+            ? "This code has expired. Request a new one below."
+            : error === "code_not_requested"
+              ? "Verification code was not requested yet. Request a new code below."
+              : error === "verification_failed"
+                ? "Verification failed. Please try again."
+                : error === "email_config_missing"
+                  ? "Email verification is not configured. Please contact support."
+                  : error === "send_failed"
+                    ? "Unable to send the verification code. Please try again later."
+                    : error === "missing_email"
+                      ? "Please enter your email address."
+                      : error === "resend_failed"
+                        ? "Failed to resend verification code. Please try again."
+                        : null;
 
   const successMessage =
     success === "already_verified"
       ? "Your email has already been verified!"
       : success === "email_resent"
-        ? "Verification email sent! Check your inbox."
+        ? "A new verification code was sent to your email."
         : null;
 
   const isPending = status === "check_email";
@@ -171,74 +184,57 @@ export default async function VerifyEmailPage({
           </div>
         ) : null}
 
-        {isPending ? (
-          <div className="panel auth-card" style={{ textAlign: "center" }}>
-            <p style={{ marginTop: 0 }}>We've sent a verification link to your email.</p>
-            <p style={{ fontSize: "0.95rem", color: "#666" }}>
-              Click the link in your email to verify your account and get started.
-            </p>
-            <p style={{ fontSize: "0.85rem", color: "#999", marginBottom: "1.5rem" }}>
-              The link expires in 24 hours.
-            </p>
+        <div className="panel auth-card" style={{ textAlign: "center" }}>
+          <p style={{ marginTop: 0 }}>{isPending ? "Check your email for the 6-digit code." : "Enter the 6-digit code we sent to your email."}</p>
+          <p style={{ fontSize: "0.95rem", color: "#666", marginBottom: "1.5rem" }}>
+            {isPending ? "Enter the code below when you receive it." : "If you did not receive a code, request a new one."}
+          </p>
 
-            <div style={{ borderTop: "1px solid #eee", paddingTop: "1.5rem" }}>
-              <p style={{ fontSize: "0.9rem", marginBottom: "1rem" }}>Didn't receive the email?</p>
-              <form action={resendVerificationEmail} style={{ display: "flex", gap: "0.5rem" }}>
+          <form action={verifyEmailCode} style={{ display: "grid", gap: "1rem", marginBottom: "1.5rem" }}>
+            <label className="stack">
+              <span>Email</span>
+              <input
+                type="email"
+                name="email"
+                placeholder="you@example.com"
+                defaultValue={paramEmail || ""}
+                required
+                autoComplete="email"
+              />
+            </label>
+            <label className="stack">
+              <span>Verification Code</span>
+              <input
+                type="text"
+                name="code"
+                placeholder="123456"
+                inputMode="numeric"
+                pattern="[0-9]{6}"
+                maxLength={6}
+                required
+              />
+            </label>
+            <button type="submit" className="form-primary">Verify Email</button>
+          </form>
+
+          <div style={{ borderTop: "1px solid #eee", paddingTop: "1.5rem" }}>
+            <p style={{ fontSize: "0.9rem", marginBottom: "1rem" }}>Didn't receive a code?</p>
+            <form action={resendVerificationCode} style={{ display: "grid", gap: "0.75rem" }}>
+              <label className="stack">
+                <span>Email</span>
                 <input
                   type="email"
                   name="email"
-                  placeholder="Enter your email"
-                  defaultValue={paramEmail || ""}
-                  required
-                  style={{
-                    flex: 1,
-                    padding: "0.5rem",
-                    border: "1px solid #ddd",
-                    borderRadius: "4px",
-                    fontSize: "0.9rem",
-                  }}
-                />
-                <button
-                  type="submit"
-                  className="form-primary"
-                  style={{ whiteSpace: "nowrap" }}
-                >
-                  Resend
-                </button>
-              </form>
-            </div>
-          </div>
-        ) : (
-          <div className="panel auth-card" style={{ textAlign: "center" }}>
-            <p style={{ marginTop: 0 }}>Email verification</p>
-            <p style={{ fontSize: "0.9rem", color: "#666", marginBottom: "1.5rem" }}>
-              If you have a verification link, paste it in your browser's address bar or use the form below.
-            </p>
-
-            <div style={{ borderTop: "1px solid #eee", paddingTop: "1.5rem" }}>
-              <p style={{ fontSize: "0.9rem", marginBottom: "1rem" }}>Resend verification email:</p>
-              <form action={resendVerificationEmail} style={{ display: "flex", gap: "0.5rem", flexDirection: "column" }}>
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="Enter your email"
+                  placeholder="you@example.com"
                   defaultValue={paramEmail || ""}
                   required
                   autoComplete="email"
-                  style={{
-                    padding: "0.5rem",
-                    border: "1px solid #ddd",
-                    borderRadius: "4px",
-                    fontSize: "0.9rem",
-                  }}
                 />
-                <button type="submit" className="form-primary">
-                  Resend Verification Email
-                </button>
-              </form>
-            </div>
+              </label>
+              <button type="submit" className="form-secondary">Resend Code</button>
+            </form>
           </div>
-        )}
+        </div>
 
         <div style={{ textAlign: "center", marginTop: "2rem" }}>
           <Link href="/login" style={{ color: "#1976d2", textDecoration: "none" }}>

@@ -24,21 +24,27 @@ async function login(formData: FormData) {
   const ok = await bcrypt.compare(password, user.passwordHash);
   if (!ok) redirect("/login?error=invalid_login");
 
-  // Check if email is verified
   if (!user.emailVerifiedAt) {
-    // Send verification email if not already pending
-    if (!user.emailVerificationTokenHash) {
-      try {
-        const verificationToken = await prepareEmailVerification(user.id);
-        await sendVerificationEmail({
-          email: user.email,
-          name: user.name,
-          token: verificationToken,
-        });
-      } catch (error) {
-        console.error("Error sending verification email during login:", error);
+    try {
+      const verificationCode = await prepareEmailVerification(user.id);
+      const emailResult = await sendVerificationEmail({
+        email: user.email,
+        name: user.name,
+        token: verificationCode,
+      });
+
+      if (!emailResult.ok) {
+        console.error("Failed to send verification email during login:", emailResult.reason);
+        if (emailResult.reason === "missing_config") {
+          redirect("/login?error=email_config_missing");
+        }
+        redirect("/login?error=send_failed");
       }
+    } catch (error) {
+      console.error("Error sending verification email during login:", error);
+      redirect("/login?error=send_failed");
     }
+
     redirect("/verify-email?status=check_email&email=" + encodeURIComponent(email));
   }
 
@@ -72,12 +78,10 @@ export default async function Page({
               ? "Use an account with a verified email address."
               : error === "oauth_failed"
                 ? "Social login failed. Please try again."
-        : null;
-
-  return (
-    <div className="page auth-page">
-      <div className="page-header">
-        <p className="eyebrow">DueKeeper</p>
+                : error === "email_config_missing"
+                  ? "Email verification is not configured. Please contact support."
+                : error === "send_failed"
+                  ? "Unable to send the verification code. Please try again later."
         <h1 className="page-title">{t("login")}</h1>
         <p className="muted">Log in to your private workspace.</p>
       </div>
@@ -103,6 +107,9 @@ export default async function Page({
           <input name="password" type="password" autoComplete="current-password" required />
         </label>
         <button type="submit" className="form-primary">{signInLabel}</button>
+        <p className="auth-links">
+          <Link href="/forgot-password">Forgot password?</Link>
+        </p>
         <p className="auth-links">New to DueKeeper? <Link href="/signup">Create an account</Link></p>
       </form>
     </div>

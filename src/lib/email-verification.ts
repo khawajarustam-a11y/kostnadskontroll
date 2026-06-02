@@ -1,14 +1,11 @@
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, randomInt } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 
-const VERIFICATION_MAX_AGE_MS = 1000 * 60 * 60 * 24;
+const VERIFICATION_MAX_AGE_MS = 1000 * 60 * 30;
+const PASSWORD_RESET_MAX_AGE_MS = 1000 * 60 * 30;
 
 export function hashEmailVerificationToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
-}
-
-function getVerificationAppUrl() {
-  return (process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(/\/+$/, "");
 }
 
 function escapeHtml(value: string) {
@@ -20,16 +17,32 @@ function escapeHtml(value: string) {
     .replaceAll("'", "&#039;");
 }
 
+function generateSixDigitCode() {
+  return String(randomInt(0, 1000000)).padStart(6, "0");
+}
+
 export async function prepareEmailVerification(userId: string) {
-  const token = randomBytes(32).toString("base64url");
+  const code = generateSixDigitCode();
   await prisma.user.update({
     where: { id: userId },
     data: {
-      emailVerificationTokenHash: hashEmailVerificationToken(token),
+      emailVerificationTokenHash: hashEmailVerificationToken(code),
       emailVerificationTokenExpiresAt: new Date(Date.now() + VERIFICATION_MAX_AGE_MS),
     },
   });
-  return token;
+  return code;
+}
+
+export async function preparePasswordReset(userId: string) {
+  const code = generateSixDigitCode();
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      passwordResetTokenHash: hashEmailVerificationToken(code),
+      passwordResetTokenExpiresAt: new Date(Date.now() + PASSWORD_RESET_MAX_AGE_MS),
+    },
+  });
+  return code;
 }
 
 export async function sendVerificationEmail({
@@ -47,7 +60,6 @@ export async function sendVerificationEmail({
     return { ok: false as const, reason: "missing_config" as const };
   }
 
-  const verifyUrl = `${getVerificationAppUrl()}/verify-email?token=${encodeURIComponent(token)}`;
   const safeName = escapeHtml(name?.trim() || "there");
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -58,9 +70,47 @@ export async function sendVerificationEmail({
     body: JSON.stringify({
       from,
       to: email,
-      subject: "Verify your DueKeeper email",
-      text: `Hi ${name?.trim() || "there"},\n\nVerify your DueKeeper email here:\n${verifyUrl}\n\nThis link expires in 24 hours.`,
-      html: `<p>Hi ${safeName},</p><p>Verify your DueKeeper email by clicking the link below.</p><p><a href="${verifyUrl}">Verify email</a></p><p>This link expires in 24 hours.</p>`,
+      subject: "Your DueKeeper verification code",
+      text: `Hi ${name?.trim() || "there"},\n\nUse this 6-digit code to verify your DueKeeper email:\n${token}\n\nThis code expires in 30 minutes.`,
+      html: `<p>Hi ${safeName},</p><p>Use the code below to verify your DueKeeper email.</p><p style="font-size: 1.5rem; font-weight: 700;">${token}</p><p>This code expires in 30 minutes.</p>`,
+    }),
+  });
+
+  if (!response.ok) {
+    return { ok: false as const, reason: "send_failed" as const };
+  }
+
+  return { ok: true as const };
+}
+
+export async function sendPasswordResetEmail({
+  email,
+  name,
+  token,
+}: {
+  email: string;
+  name?: string | null;
+  token: string;
+}) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.REMINDER_FROM_EMAIL;
+  if (!apiKey || !from) {
+    return { ok: false as const, reason: "missing_config" as const };
+  }
+
+  const safeName = escapeHtml(name?.trim() || "there");
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from,
+      to: email,
+      subject: "Your DueKeeper password reset code",
+      text: `Hi ${name?.trim() || "there"},\n\nUse this 6-digit code to reset your DueKeeper password:\n${token}\n\nThis code expires in 30 minutes.`,
+      html: `<p>Hi ${safeName},</p><p>Use the code below to reset your DueKeeper password.</p><p style="font-size: 1.5rem; font-weight: 700;">${token}</p><p>This code expires in 30 minutes.</p>`,
     }),
   });
 

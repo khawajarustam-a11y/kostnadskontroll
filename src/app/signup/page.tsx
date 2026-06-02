@@ -64,29 +64,27 @@ async function signUp(formData: FormData) {
     throw error;
   }
 
-  // Send verification email
   try {
-    const verificationToken = await prepareEmailVerification(user.id);
+    const verificationCode = await prepareEmailVerification(user.id);
     const emailResult = await sendVerificationEmail({
       email,
       name,
-      token: verificationToken,
+      token: verificationCode,
     });
 
     if (!emailResult.ok) {
       console.error("Failed to send verification email:", emailResult.reason);
-      // Still redirect to verification page, but user might not receive email if config is missing
       if (emailResult.reason === "missing_config") {
         redirect("/verify-email?error=email_config_missing");
       }
+      redirect("/verify-email?error=send_failed");
     }
   } catch (error) {
     console.error("Error during email verification setup:", error);
     redirect("/verify-email?error=verification_setup_failed");
   }
 
-  // Redirect to verification pending page
-  redirect("/verify-email?status=check_email");
+  redirect(`/verify-email?status=check_email&email=${encodeURIComponent(email)}`);
 }
 
 export default async function Page({
@@ -114,6 +112,10 @@ export default async function Page({
                 ? "Use an account with a verified email address."
                 : error === "oauth_failed"
                   ? "Social signup failed. Please try again."
+                : error === "email_config_missing"
+                  ? "Email verification is not configured. Please contact support."
+                : error === "send_failed"
+                  ? "Unable to send verification code to your email. Please try again later."
           : null;
 
   return (
