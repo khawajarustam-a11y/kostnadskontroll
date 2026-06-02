@@ -82,6 +82,12 @@ export default async function Page({
                   ? "Email verification is not configured. Please contact support."
                 : error === "send_failed"
                   ? "Unable to send the verification code. Please try again later."
+                : null;
+
+  return (
+    <div className="page auth-page">
+      <div className="page-header">
+        <p className="eyebrow">DueKeeper</p>
         <h1 className="page-title">{t("login")}</h1>
         <p className="muted">Log in to your private workspace.</p>
       </div>

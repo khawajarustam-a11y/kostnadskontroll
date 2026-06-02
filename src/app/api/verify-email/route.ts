@@ -15,7 +15,7 @@ export async function GET(request: Request) {
   try {
     const tokenHash = hashEmailVerificationToken(token);
 
-    const user = await prisma.user.findUnique({
+    const user = await prisma.user.findFirst({
       where: { emailVerificationTokenHash: tokenHash },
       select: {
         id: true,

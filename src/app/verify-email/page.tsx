@@ -87,6 +87,7 @@ async function resendVerificationCode(formData: FormData) {
       where: { email },
       select: {
         id: true,
+        email: true,
         name: true,
         emailVerifiedAt: true,
       },
